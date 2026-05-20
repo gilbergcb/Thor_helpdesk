@@ -1,0 +1,1158 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   THOR-HelpDesk — Design tokens
+   Palette: warm cream + ink + terracotta accent
+   Type: Fraunces (display serif) + Geist (humanist sans)
+   ============================================================ */
+
+:root[data-theme="light"] {
+  --bg: #f4efe6;
+  --bg-elev: #fbf7ef;
+  --bg-sunk: #ece5d7;
+  --ink: #1b1815;
+  --ink-soft: #4a433b;
+  --ink-mute: #7a7167;
+  --hairline: #d9cfbe;
+  --hairline-strong: #b8ac97;
+  --accent: #b5532b;
+  --accent-hover: #9c4422;
+  --accent-soft: #efd8c8;
+  --amber: #c97b2a;
+  --ok: #4f6b3b;
+  --ok-soft: #dfe6ce;
+  --warn: #9a6b1f;
+  --warn-soft: #efe0bf;
+  --info: #3b5a6b;
+  --info-soft: #d6e2e7;
+  --danger: #8c2b22;
+  --danger-soft: #eccfc8;
+  --bubble-client: #fbf7ef;
+  --bubble-agent: #f1e4d2;
+  --grain-opacity: 0.035;
+  --shadow-sm: 0 1px 0 rgba(27, 24, 21, 0.04);
+  --shadow-md: 0 12px 32px -16px rgba(27, 24, 21, 0.18),
+    0 2px 4px -2px rgba(27, 24, 21, 0.08);
+}
+
+:root[data-theme="dark"] {
+  --bg: #161310;
+  --bg-elev: #1e1a16;
+  --bg-sunk: #100e0b;
+  --ink: #f1e9da;
+  --ink-soft: #c9bfae;
+  --ink-mute: #8b8273;
+  --hairline: #2e2823;
+  --hairline-strong: #463e36;
+  --accent: #d9743e;
+  --accent-hover: #e89260;
+  --accent-soft: #3a2418;
+  --amber: #e0993f;
+  --ok: #93ae73;
+  --ok-soft: #2a2e1f;
+  --warn: #d7a557;
+  --warn-soft: #322715;
+  --info: #8ab0c2;
+  --info-soft: #1b262c;
+  --danger: #d17a6f;
+  --danger-soft: #2e1815;
+  --bubble-client: #1e1a16;
+  --bubble-agent: #2a2018;
+  --grain-opacity: 0.04;
+  --shadow-sm: 0 1px 0 rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 16px 40px -18px rgba(0, 0, 0, 0.6),
+    0 2px 4px -2px rgba(0, 0, 0, 0.4);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+  font-family: "Geist", "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+    sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink);
+  background: var(--bg);
+  font-variant-numeric: oldstyle-nums proportional-nums;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  position: relative;
+}
+
+/* Grain overlay */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  mix-blend-mode: multiply;
+}
+
+:root[data-theme="dark"] body::before {
+  mix-blend-mode: screen;
+}
+
+/* Radial wash */
+body::after {
+  content: "";
+  position: fixed;
+  inset: -20%;
+  pointer-events: none;
+  z-index: -1;
+  background: radial-gradient(
+      60% 50% at 80% 0%,
+      color-mix(in srgb, var(--accent) 14%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      50% 40% at 0% 100%,
+      color-mix(in srgb, var(--amber) 10%, transparent),
+      transparent 70%
+    );
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+/* ---------- Typography helpers ---------- */
+.font-display,
+.serif {
+  font-family: "Fraunces", Georgia, serif;
+  font-feature-settings: "ss01", "ss02";
+  letter-spacing: -0.01em;
+}
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+.smallcaps {
+  font-family: "Geist", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-mute);
+}
+.foot-italic {
+  font-family: "Fraunces", serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--ink-mute);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Legacy .input (kept for AdminPanel forms) ---------- */
+.input {
+  margin-top: 0.25rem;
+  width: 100%;
+  border: 1px solid var(--hairline-strong);
+  background: var(--bg);
+  color: var(--ink);
+  padding: 0.55rem 0.75rem;
+  outline: none;
+  font-family: "Geist", sans-serif;
+  font-size: 14px;
+  transition: border-color 0.2s, background 0.2s;
+}
+.input:focus {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent-soft) 35%, var(--bg));
+}
+
+/* ---------- Stagger animation utility ---------- */
+.thor-stagger > * {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: thor-rise 0.55s ease forwards;
+}
+.thor-stagger > *:nth-child(1) {
+  animation-delay: 0.04s;
+}
+.thor-stagger > *:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.thor-stagger > *:nth-child(3) {
+  animation-delay: 0.16s;
+}
+.thor-stagger > *:nth-child(4) {
+  animation-delay: 0.22s;
+}
+.thor-stagger > *:nth-child(5) {
+  animation-delay: 0.28s;
+}
+.thor-stagger > *:nth-child(6) {
+  animation-delay: 0.34s;
+}
+.thor-stagger > *:nth-child(7) {
+  animation-delay: 0.4s;
+}
+.thor-stagger > *:nth-child(8) {
+  animation-delay: 0.46s;
+}
+@keyframes thor-rise {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- Thor card primitive ---------- */
+.thor-card {
+  background: var(--bg-elev);
+  border: 1px solid var(--hairline);
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s, background 0.2s;
+}
+.thor-card:hover {
+  border-color: var(--hairline-strong);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+.thor-card.is-active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent-soft) 35%, var(--bg-elev));
+}
+
+/* ---------- Tags / pills ---------- */
+.thor-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: "Geist", sans-serif;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 500;
+  padding: 3px 8px;
+  border: 1px solid var(--hairline-strong);
+  color: var(--ink-soft);
+  background: transparent;
+}
+.thor-tag .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ink-mute);
+}
+.thor-tag.novo {
+  color: var(--info);
+  border-color: color-mix(in srgb, var(--info) 40%, var(--hairline));
+  background: color-mix(in srgb, var(--info-soft) 50%, transparent);
+}
+.thor-tag.novo .dot {
+  background: var(--info);
+}
+.thor-tag.triagem {
+  color: var(--warn);
+  border-color: color-mix(in srgb, var(--warn) 40%, var(--hairline));
+  background: color-mix(in srgb, var(--warn-soft) 50%, transparent);
+}
+.thor-tag.triagem .dot {
+  background: var(--warn);
+}
+.thor-tag.em_atendimento {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--hairline));
+  background: color-mix(in srgb, var(--accent-soft) 60%, transparent);
+}
+.thor-tag.em_atendimento .dot {
+  background: var(--accent);
+}
+.thor-tag.aguardando_cliente {
+  color: var(--amber);
+  border-color: color-mix(in srgb, var(--amber) 40%, var(--hairline));
+  background: color-mix(in srgb, var(--warn-soft) 40%, transparent);
+}
+.thor-tag.aguardando_cliente .dot {
+  background: var(--amber);
+}
+.thor-tag.resolvido {
+  color: var(--ok);
+  border-color: color-mix(in srgb, var(--ok) 40%, var(--hairline));
+  background: color-mix(in srgb, var(--ok-soft) 50%, transparent);
+}
+.thor-tag.resolvido .dot {
+  background: var(--ok);
+}
+.thor-tag.fechado {
+  color: var(--ink-mute);
+  border-color: var(--hairline);
+}
+
+/* ---------- Priority chips ---------- */
+.priority {
+  font-family: "Fraunces", serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--ink-mute);
+}
+.priority.alta,
+.priority.critica {
+  color: var(--danger);
+}
+.priority.media {
+  color: var(--warn);
+}
+.priority.baixa {
+  color: var(--ok);
+}
+
+/* ---------- Avatar ---------- */
+.thor-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(140deg, var(--accent), var(--amber));
+  color: #fbf7ef;
+  font-family: "Fraunces", serif;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: 1px solid color-mix(in srgb, var(--accent) 60%, black);
+  width: 34px;
+  height: 34px;
+  font-size: 13px;
+}
+.thor-avatar.xs {
+  width: 22px;
+  height: 22px;
+  font-size: 10px;
+}
+.thor-avatar.sm {
+  width: 26px;
+  height: 26px;
+  font-size: 11px;
+}
+.thor-avatar.lg {
+  width: 44px;
+  height: 44px;
+  font-size: 15px;
+}
+
+/* ---------- Buttons (editorial) ---------- */
+.thor-btn {
+  font-family: "Geist", sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 9px 16px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fbf7ef;
+  cursor: pointer;
+  letter-spacing: 0.01em;
+  transition: background 0.2s, border-color 0.2s, transform 0.1s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.thor-btn:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+.thor-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.thor-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.thor-btn.ghost {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--hairline-strong);
+}
+.thor-btn.ghost:hover:not(:disabled) {
+  background: var(--bg-elev);
+  border-color: var(--ink-soft);
+}
+.thor-btn.danger-ghost {
+  background: transparent;
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 40%, var(--hairline));
+}
+.thor-btn.danger-ghost:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger-soft) 50%, transparent);
+}
+.thor-btn.sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+/* ---------- Icon button ---------- */
+.thor-icon-btn {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--hairline);
+  background: var(--bg);
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.thor-icon-btn:hover:not(:disabled) {
+  color: var(--ink);
+  border-color: var(--hairline-strong);
+}
+
+/* ---------- Field ---------- */
+.thor-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.thor-field label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-mute);
+}
+.thor-field input,
+.thor-field select,
+.thor-field textarea {
+  font-family: "Geist", sans-serif;
+  font-size: 14px;
+  padding: 11px 12px;
+  border: 1px solid var(--hairline-strong);
+  background: var(--bg);
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+.thor-field input:focus,
+.thor-field select:focus,
+.thor-field textarea:focus {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent-soft) 35%, var(--bg));
+}
+
+/* ---------- Editorial table ---------- */
+.thor-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.thor-table thead th {
+  text-align: left;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 500;
+  color: var(--ink-mute);
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--bg-sunk) 40%, var(--bg-elev));
+}
+.thor-table tbody td {
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--hairline);
+  color: var(--ink);
+  vertical-align: middle;
+}
+.thor-table tbody tr:nth-child(even) td {
+  background: color-mix(in srgb, var(--bg-sunk) 20%, var(--bg-elev));
+}
+.thor-table tbody tr:hover td {
+  background: color-mix(in srgb, var(--accent-soft) 25%, var(--bg-elev));
+}
+.thor-table td.code {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+  width: 90px;
+}
+.thor-table td.right {
+  text-align: right;
+}
+.thor-row-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  opacity: 0.55;
+  transition: opacity 0.2s;
+}
+.thor-table tbody tr:hover .thor-row-actions {
+  opacity: 1;
+}
+.thor-admin-table {
+  table-layout: fixed;
+  min-width: 820px;
+}
+.thor-admin-table th,
+.thor-admin-table td {
+  overflow-wrap: anywhere;
+}
+.thor-admin-table td {
+  max-width: 320px;
+}
+.thor-admin-table th.actions-col,
+.thor-admin-table td.right {
+  width: 230px;
+  min-width: 230px;
+}
+.thor-admin-table .thor-row-actions {
+  opacity: 1;
+}
+.thor-ico {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  cursor: pointer;
+  color: var(--ink-soft);
+  background: transparent;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.thor-ico:hover {
+  border-color: var(--hairline-strong);
+  color: var(--ink);
+  background: var(--bg);
+}
+.thor-ico.danger:hover {
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 40%, var(--hairline));
+}
+
+/* ---------- App shell ---------- */
+.thor-app-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 16px 32px;
+  border-bottom: 1px solid var(--hairline);
+  background: var(--bg-elev);
+  box-shadow: var(--shadow-sm);
+}
+
+.thor-app-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.thor-app-logo {
+  display: block;
+  width: clamp(128px, 12vw, 168px);
+  height: auto;
+  flex: 0 0 auto;
+}
+
+.thor-login-logo {
+  display: block;
+  width: min(230px, 78%);
+  height: auto;
+  margin: 0 auto;
+}
+
+.thor-app-nav {
+  display: flex;
+  gap: 4px;
+  margin-left: 16px;
+  flex-wrap: wrap;
+}
+
+.thor-app-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* ---------- Admin registrations ---------- */
+.thor-admin-page {
+  padding-inline: clamp(16px, 2vw, 32px);
+}
+
+.thor-tabs {
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.thor-tabs > button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.thor-admin-split {
+  display: grid;
+  grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.thor-admin-split.compact-form {
+  grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+}
+
+.thor-admin-split.wide-table {
+  grid-template-columns: minmax(320px, 400px) minmax(0, 1fr);
+}
+
+.thor-admin-form-panel {
+  background: var(--bg-elev);
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow-sm);
+  min-width: 0;
+}
+
+.thor-admin-form-head {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.thor-admin-form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px 20px;
+  padding: 22px;
+}
+
+.thor-admin-form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 22px;
+  border-top: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--bg-sunk) 25%, var(--bg-elev));
+}
+
+.thor-data-table-shell {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.thor-data-table-scroll {
+  overflow-x: auto;
+}
+
+.thor-data-table-cards {
+  display: none;
+  gap: 14px;
+  padding: 14px;
+}
+
+.thor-data-card {
+  padding: 14px;
+  box-shadow: none;
+}
+
+.thor-data-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 16px;
+}
+
+.thor-data-card-grid span {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.thor-data-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--hairline);
+}
+
+.thor-data-empty {
+  padding: 18px;
+  text-align: center;
+}
+
+.thor-admin-token-input {
+  width: 132px;
+  min-width: 118px;
+  flex: 0 0 132px;
+  border: 1px solid var(--hairline);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 12px;
+  padding: 7px 9px;
+  outline: none;
+}
+
+.thor-admin-token-input:focus {
+  border-color: var(--accent);
+}
+
+/* ---------- Access vault ---------- */
+.thor-access-page {
+  padding-inline: clamp(16px, 2vw, 32px);
+}
+
+.thor-access-header {
+  display: flex;
+  align-items: baseline;
+  gap: 24px;
+  border-bottom: 1px solid var(--hairline);
+  padding-bottom: 14px;
+  margin-bottom: 24px;
+}
+
+.thor-access-header-note {
+  margin-left: auto;
+}
+
+.thor-access-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 14px;
+}
+
+.thor-access-toolbar-copy {
+  color: var(--ink-mute);
+  font-size: 12px;
+  margin: 3px 0 0;
+}
+
+.thor-access-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(420px, 100%);
+  border: 1px solid var(--hairline);
+  background: var(--bg-elev);
+  color: var(--ink-mute);
+  padding: 0 12px;
+}
+
+.thor-access-search:focus-within {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent-soft) 24%, var(--bg-elev));
+}
+
+.thor-access-search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 13px;
+  padding: 11px 0;
+}
+
+.thor-access-search input::placeholder {
+  color: var(--ink-mute);
+}
+
+.thor-access-layout {
+  display: grid;
+  gap: 28px;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+.thor-access-table-shell {
+  background: var(--bg-elev);
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow-sm);
+}
+
+.thor-access-table-shell {
+  overflow: hidden;
+}
+
+.thor-access-table-scroll {
+  overflow-x: auto;
+}
+
+.thor-access-table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+  font-size: 13px;
+  table-layout: fixed;
+}
+
+.thor-access-table th:nth-child(1),
+.thor-access-table td:nth-child(1) {
+  width: 17%;
+}
+
+.thor-access-table th:nth-child(2),
+.thor-access-table td:nth-child(2) {
+  width: 17%;
+}
+
+.thor-access-table th:nth-child(3),
+.thor-access-table td:nth-child(3) {
+  width: 34%;
+}
+
+.thor-access-table th:nth-child(4),
+.thor-access-table td:nth-child(4) {
+  width: 18%;
+}
+
+.thor-access-table th:nth-child(5),
+.thor-access-table td:nth-child(5) {
+  width: 14%;
+}
+
+.thor-access-table tbody tr {
+  transition: background 0.15s;
+}
+
+.thor-access-table tbody tr:hover td {
+  background: color-mix(in srgb, var(--accent-soft) 18%, transparent);
+}
+
+.thor-access-table tbody tr.is-selected td {
+  background: color-mix(in srgb, var(--accent-soft) 34%, var(--bg-elev));
+}
+
+.thor-access-table code {
+  display: block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.thor-access-token-row {
+  display: grid;
+  grid-template-columns: minmax(96px, 1fr) 34px;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.thor-access-token-input {
+  width: 100%;
+  min-width: 0;
+  font-size: 12px;
+  padding: 9px 10px;
+  border: 1px solid var(--hairline-strong);
+  background: var(--bg);
+  color: var(--ink);
+  outline: none;
+}
+
+.thor-access-token-input:focus {
+  border-color: var(--accent);
+}
+
+.thor-access-cards {
+  display: none;
+  padding: 16px;
+  gap: 14px;
+}
+
+.thor-access-card {
+  padding: 16px;
+  box-shadow: none;
+}
+
+.thor-access-card-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.thor-access-card-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  margin-top: 14px;
+}
+
+.thor-access-empty {
+  padding: 12px;
+  text-align: center;
+}
+
+.thor-access-reveal-panel {
+  position: sticky;
+  top: 12px;
+  z-index: 30;
+  background: var(--bg-elev);
+  border: 1px solid var(--hairline-strong);
+  box-shadow: var(--shadow-md);
+  padding: 16px;
+  margin-bottom: 18px;
+}
+
+.thor-access-reveal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.thor-access-reveal-head h3 {
+  font-size: 22px;
+  font-weight: 500;
+  margin: 4px 0 0;
+}
+
+.thor-access-secret-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.thor-access-secret-grid.compact {
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr) minmax(0, 1.1fr) minmax(0, 1.2fr);
+}
+
+.thor-access-secret-grid code {
+  display: block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+/* ---------- Perfil chip ---------- */
+.perfil {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 4px;
+  border: 1px solid var(--hairline);
+  background: var(--bg);
+}
+.perfil .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink-mute);
+  margin-left: 4px;
+}
+.perfil.atendente .dot {
+  background: var(--info);
+}
+.perfil.supervisor .dot {
+  background: var(--amber);
+}
+.perfil.administrador .dot {
+  background: var(--accent);
+}
+.perfil span {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+}
+
+/* ---------- Composer textarea (drawer) ---------- */
+.thor-composer textarea {
+  resize: none;
+  min-height: 84px;
+  width: 100%;
+  border: 1px solid var(--hairline);
+  background: var(--bg-elev);
+  font-family: "Geist", sans-serif;
+  font-size: 13.5px;
+  padding: 10px 12px;
+  color: var(--ink);
+  outline: none;
+}
+.thor-composer textarea:focus {
+  border-color: var(--accent);
+}
+
+/* ---------- Asterisk divider ---------- */
+.divider-asterisk {
+  text-align: center;
+  color: var(--ink-mute);
+  font-family: "Fraunces", serif;
+  font-size: 18px;
+  margin: 32px 0;
+  letter-spacing: 1em;
+}
+
+/* Selection */
+::selection {
+  background: color-mix(in srgb, var(--accent-soft) 75%, transparent);
+  color: var(--ink);
+}
+
+@media (max-width: 1180px) {
+  .thor-app-header {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .thor-app-brand {
+    width: 100%;
+  }
+
+  .thor-app-nav {
+    margin-left: 0;
+    flex: 1 1 auto;
+  }
+
+  .thor-app-actions {
+    margin-left: 0;
+  }
+
+  .thor-admin-split,
+  .thor-admin-split.compact-form,
+  .thor-admin-split.wide-table {
+    grid-template-columns: 1fr;
+  }
+
+  .thor-admin-form-panel {
+    max-width: none;
+  }
+}
+
+@media (max-width: 820px) {
+  .thor-app-header {
+    padding: 14px 18px;
+    gap: 16px;
+  }
+
+  .thor-app-brand {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .thor-app-nav {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    flex-wrap: nowrap;
+  }
+
+  .thor-app-actions {
+    width: 100%;
+  }
+
+  .thor-admin-page {
+    padding-inline: 18px;
+  }
+
+  .thor-admin-form-grid {
+    grid-template-columns: 1fr;
+    padding: 18px;
+  }
+
+  .thor-admin-form-head,
+  .thor-admin-form-footer {
+    padding-inline: 18px;
+  }
+
+  .thor-admin-form-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .thor-data-table-scroll {
+    display: none;
+  }
+
+  .thor-data-table-cards {
+    display: grid;
+  }
+
+  .thor-access-page {
+    padding-inline: 18px;
+  }
+
+  .thor-access-header {
+    flex-wrap: wrap;
+    gap: 10px 16px;
+  }
+
+  .thor-access-header-note {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .thor-access-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .thor-access-search {
+    width: 100%;
+  }
+
+  .thor-access-secret-grid.compact {
+    grid-template-columns: 1fr;
+  }
+
+  .thor-access-reveal-panel {
+    inset: auto 12px 12px;
+    top: auto;
+    width: auto;
+    max-height: min(68vh, 560px);
+    overflow: auto;
+    position: fixed;
+  }
+}
+
+@media (max-width: 980px) {
+  .thor-access-table-scroll {
+    display: none;
+  }
+
+  .thor-access-cards {
+    display: grid;
+  }
+}
+
+@media (max-width: 560px) {
+  .thor-app-actions {
+    gap: 8px;
+  }
+
+  .thor-data-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .thor-data-card-actions {
+    justify-content: stretch;
+  }
+
+  .thor-data-card-actions .thor-admin-token-input {
+    flex: 1 1 100%;
+  }
+
+  .thor-access-card-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .thor-access-token-input {
+    width: 100%;
+  }
+}

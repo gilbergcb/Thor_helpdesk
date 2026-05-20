@@ -1,0 +1,2047 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>THOR-HelpDesk — Redesign Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   THOR-HelpDesk — Redesign Mockup
+   Palette: warm cream + ink + terracotta accent
+   Type: Fraunces (display serif) + Geist (humanist sans)
+   ============================================================ */
+
+:root[data-theme="light"]{
+  --bg:            #F4EFE6;     /* parchment */
+  --bg-elev:       #FBF7EF;     /* warm white */
+  --bg-sunk:       #ECE5D7;
+  --ink:           #1B1815;     /* near black, warm */
+  --ink-soft:      #4A433B;
+  --ink-mute:      #7A7167;
+  --hairline:      #D9CFBE;
+  --hairline-strong:#B8AC97;
+  --accent:        #B5532B;     /* terracotta */
+  --accent-hover:  #9C4422;
+  --accent-soft:   #EFD8C8;
+  --amber:         #C97B2A;
+  --ok:            #4F6B3B;
+  --ok-soft:       #DFE6CE;
+  --warn:          #9A6B1F;
+  --warn-soft:     #EFE0BF;
+  --info:          #3B5A6B;
+  --info-soft:     #D6E2E7;
+  --danger:        #8C2B22;
+  --danger-soft:   #ECCFC8;
+  --bubble-client: #FBF7EF;
+  --bubble-agent:  #F1E4D2;
+  --grain-opacity: 0.035;
+  --shadow-sm: 0 1px 0 rgba(27,24,21,0.04);
+  --shadow-md: 0 12px 32px -16px rgba(27,24,21,0.18), 0 2px 4px -2px rgba(27,24,21,0.08);
+}
+:root[data-theme="dark"]{
+  --bg:            #161310;
+  --bg-elev:       #1E1A16;
+  --bg-sunk:       #100E0B;
+  --ink:           #F1E9DA;
+  --ink-soft:      #C9BFAE;
+  --ink-mute:      #8B8273;
+  --hairline:      #2E2823;
+  --hairline-strong:#463E36;
+  --accent:        #D9743E;
+  --accent-hover:  #E89260;
+  --accent-soft:   #3A2418;
+  --amber:         #E0993F;
+  --ok:            #93AE73;
+  --ok-soft:       #2A2E1F;
+  --warn:          #D7A557;
+  --warn-soft:     #322715;
+  --info:          #8AB0C2;
+  --info-soft:     #1B262C;
+  --danger:        #D17A6F;
+  --danger-soft:   #2E1815;
+  --bubble-client: #1E1A16;
+  --bubble-agent:  #2A2018;
+  --grain-opacity: 0.04;
+  --shadow-sm: 0 1px 0 rgba(0,0,0,0.4);
+  --shadow-md: 0 16px 40px -18px rgba(0,0,0,0.6), 0 2px 4px -2px rgba(0,0,0,0.4);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+html{transition: background-color .3s ease, color .3s ease}
+body{
+  font-family:'Geist','Inter',system-ui,-apple-system,sans-serif;
+  font-size:14px;
+  line-height:1.55;
+  color:var(--ink);
+  background:var(--bg);
+  font-variant-numeric: oldstyle-nums proportional-nums;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  transition: background-color .3s ease, color .3s ease;
+  position:relative;
+  min-height:100vh;
+}
+/* Grain overlay */
+body::before{
+  content:"";
+  position:fixed; inset:0;
+  pointer-events:none;
+  z-index:9999;
+  opacity:var(--grain-opacity);
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  mix-blend-mode: multiply;
+}
+:root[data-theme="dark"] body::before{ mix-blend-mode: screen; }
+
+/* Radial wash */
+body::after{
+  content:""; position:fixed; inset:-20%;
+  pointer-events:none; z-index:-1;
+  background: radial-gradient(60% 50% at 80% 0%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%),
+              radial-gradient(50% 40% at 0% 100%, color-mix(in srgb, var(--amber) 10%, transparent), transparent 70%);
+}
+
+/* Typography */
+.serif{ font-family:'Fraunces', Georgia, serif; font-feature-settings:"ss01","ss02"; letter-spacing:-0.01em;}
+.tnum{ font-variant-numeric: tabular-nums; }
+.smallcaps{
+  font-family:'Geist',sans-serif;
+  text-transform:uppercase;
+  letter-spacing:0.12em;
+  font-size:11px;
+  font-weight:500;
+  color:var(--ink-mute);
+}
+.label{
+  text-transform:uppercase;
+  letter-spacing:0.1em;
+  font-size:11px;
+  font-weight:500;
+  color:var(--ink-mute);
+}
+.foot{ font-family:'Fraunces',serif; font-style:italic; font-size:12px; color:var(--ink-mute); font-variant-numeric:tabular-nums; }
+
+a{color:inherit}
+
+/* ---------- Layout shell ---------- */
+.shell{
+  max-width:1440px;
+  margin:0 auto;
+  padding:48px 56px 96px;
+}
+.screen{
+  margin:64px 0;
+  opacity:0; transform:translateY(8px);
+  animation: rise .7s ease forwards;
+}
+.screen:nth-of-type(1){ animation-delay:.05s }
+.screen:nth-of-type(2){ animation-delay:.15s }
+.screen:nth-of-type(3){ animation-delay:.25s }
+.screen:nth-of-type(4){ animation-delay:.35s }
+.screen:nth-of-type(5){ animation-delay:.45s }
+.screen:nth-of-type(6){ animation-delay:.55s }
+@keyframes rise{ to{opacity:1; transform:translateY(0)} }
+
+.screen-head{
+  display:flex; align-items:baseline; gap:24px;
+  border-bottom:1px solid var(--hairline);
+  padding-bottom:14px; margin-bottom:28px;
+}
+.screen-head .num{
+  font-family:'Fraunces',serif;
+  font-style:italic;
+  font-size:13px;
+  color:var(--ink-mute);
+  font-variant-numeric:tabular-nums;
+  min-width:56px;
+}
+.screen-head h2{
+  font-family:'Fraunces',serif;
+  font-weight:500;
+  font-size:26px;
+  margin:0;
+  letter-spacing:-0.015em;
+}
+.screen-head .meta{ margin-left:auto; }
+
+.divider-asterisk{
+  text-align:center;
+  color:var(--ink-mute);
+  font-family:'Fraunces',serif;
+  font-size:18px;
+  margin:48px 0;
+  letter-spacing:1em;
+}
+
+/* ---------- Design notes panel ---------- */
+.notes{
+  border:1px solid var(--hairline);
+  background:var(--bg-elev);
+  padding:0;
+  margin-bottom:40px;
+  box-shadow:var(--shadow-sm);
+}
+.notes summary{
+  cursor:pointer;
+  list-style:none;
+  padding:18px 24px;
+  display:flex; align-items:center; gap:16px;
+  border-bottom:1px solid transparent;
+  transition: border-color .2s;
+}
+.notes[open] summary{ border-bottom-color:var(--hairline); }
+.notes summary::-webkit-details-marker{ display:none }
+.notes .chev{ margin-left:auto; color:var(--ink-mute); transition:transform .2s; }
+.notes[open] .chev{ transform:rotate(90deg); }
+.notes-body{
+  padding:24px 28px 28px;
+  display:grid; grid-template-columns: repeat(3, 1fr); gap:32px;
+}
+.notes-body h4{
+  font-family:'Fraunces',serif; font-weight:500; font-size:14px;
+  margin:0 0 8px; letter-spacing:0;
+}
+.notes-body p{ margin:0; color:var(--ink-soft); font-size:13px; line-height:1.6; }
+.swatches{ display:flex; gap:6px; margin-top:10px; }
+.sw{ width:22px; height:22px; border:1px solid var(--hairline-strong); }
+
+/* ---------- Global header ---------- */
+.gheader{
+  display:flex; align-items:center; gap:24px;
+  padding:14px 22px;
+  border:1px solid var(--hairline);
+  background:var(--bg-elev);
+  box-shadow:var(--shadow-sm);
+}
+.brand{
+  display:flex; align-items:baseline; gap:10px;
+}
+.brand .mark{
+  font-family:'Fraunces',serif;
+  font-weight:600;
+  font-size:22px;
+  letter-spacing:-0.02em;
+}
+.brand .mark em{ font-style:italic; color:var(--accent); font-weight:500; }
+.brand .tag{
+  font-family:'Fraunces',serif; font-style:italic;
+  color:var(--ink-mute); font-size:12px;
+  border-left:1px solid var(--hairline-strong);
+  padding-left:10px;
+}
+.nav{ display:flex; gap:4px; margin-left:24px; }
+.nav a{
+  text-decoration:none;
+  font-size:13px;
+  padding:8px 12px;
+  color:var(--ink-soft);
+  border-bottom:1px solid transparent;
+  transition: color .2s, border-color .2s;
+}
+.nav a:hover{ color:var(--ink); }
+.nav a.active{ color:var(--ink); border-bottom-color:var(--accent); }
+.gheader .right{ margin-left:auto; display:flex; align-items:center; gap:14px; }
+.search{
+  display:flex; align-items:center; gap:8px;
+  border:1px solid var(--hairline);
+  padding:7px 12px; min-width:280px;
+  background:var(--bg);
+  color:var(--ink-mute);
+  font-size:13px;
+}
+.search kbd{
+  margin-left:auto;
+  font-family:'Geist',sans-serif;
+  font-size:10px;
+  letter-spacing:0.05em;
+  border:1px solid var(--hairline-strong);
+  padding:1px 6px;
+  color:var(--ink-mute);
+}
+.icon-btn{
+  width:34px; height:34px;
+  display:inline-flex; align-items:center; justify-content:center;
+  border:1px solid var(--hairline);
+  background:var(--bg);
+  color:var(--ink-soft);
+  cursor:pointer;
+  transition: background .2s, color .2s, border-color .2s;
+}
+.icon-btn:hover{ color:var(--ink); border-color:var(--hairline-strong); }
+.avatar{
+  width:34px; height:34px;
+  background: linear-gradient(140deg, var(--accent), var(--amber));
+  color:#FBF7EF;
+  display:inline-flex; align-items:center; justify-content:center;
+  font-family:'Fraunces',serif; font-weight:600; font-size:13px;
+  letter-spacing:0.02em;
+  border:1px solid color-mix(in srgb, var(--accent) 60%, black);
+}
+.avatar.sm{ width:26px; height:26px; font-size:11px; }
+.avatar.xs{ width:22px; height:22px; font-size:10px; }
+.avatar.lg{ width:44px; height:44px; font-size:15px; }
+
+/* ---------- Buttons ---------- */
+.btn{
+  font-family:'Geist',sans-serif;
+  font-size:13px;
+  font-weight:500;
+  padding:9px 16px;
+  border:1px solid var(--accent);
+  background:var(--accent);
+  color:#FBF7EF;
+  cursor:pointer;
+  letter-spacing:0.01em;
+  transition: background .2s, border-color .2s, transform .2s;
+}
+.btn:hover{ background:var(--accent-hover); border-color:var(--accent-hover); }
+.btn:active{ transform: translateY(1px); }
+.btn.ghost{
+  background:transparent; color:var(--ink);
+  border-color:var(--hairline-strong);
+}
+.btn.ghost:hover{ background:var(--bg-elev); border-color:var(--ink-soft); }
+.btn.danger-ghost{
+  background:transparent; color:var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 40%, var(--hairline));
+}
+.btn.sm{ padding:6px 12px; font-size:12px; }
+
+/* ---------- Tags / pills ---------- */
+.tag{
+  display:inline-flex; align-items:center; gap:6px;
+  font-family:'Geist',sans-serif;
+  font-size:10.5px;
+  text-transform:uppercase;
+  letter-spacing:0.12em;
+  font-weight:500;
+  padding:3px 8px;
+  border:1px solid var(--hairline-strong);
+  color:var(--ink-soft);
+  background:transparent;
+}
+.tag .dot{ width:6px; height:6px; border-radius:50%; background:var(--ink-mute); }
+.tag.novo{ color:var(--info); border-color: color-mix(in srgb, var(--info) 40%, var(--hairline)); background: color-mix(in srgb, var(--info-soft) 50%, transparent); }
+.tag.novo .dot{ background:var(--info); }
+.tag.triagem{ color:var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, var(--hairline)); background: color-mix(in srgb, var(--warn-soft) 50%, transparent); }
+.tag.triagem .dot{ background:var(--warn); }
+.tag.atend{ color:var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, var(--hairline)); background: color-mix(in srgb, var(--accent-soft) 60%, transparent); }
+.tag.atend .dot{ background:var(--accent); }
+.tag.cliente{ color:var(--amber); border-color: color-mix(in srgb, var(--amber) 40%, var(--hairline)); background: color-mix(in srgb, var(--warn-soft) 40%, transparent); }
+.tag.cliente .dot{ background:var(--amber); }
+.tag.resolvido{ color:var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, var(--hairline)); background: color-mix(in srgb, var(--ok-soft) 50%, transparent); }
+.tag.resolvido .dot{ background:var(--ok); }
+.tag.fechado{ color:var(--ink-mute); border-color:var(--hairline); }
+
+.priority{
+  font-family:'Fraunces',serif;
+  font-style:italic;
+  font-size:12px;
+  color:var(--ink-mute);
+}
+.priority.alta{ color:var(--danger); }
+.priority.media{ color:var(--warn); }
+.priority.baixa{ color:var(--ok); }
+
+/* ============================================================
+   1) LOGIN
+   ============================================================ */
+.login{
+  display:grid;
+  grid-template-columns: 1.1fr 1fr;
+  min-height:560px;
+  border:1px solid var(--hairline);
+  background:var(--bg-elev);
+  box-shadow:var(--shadow-md);
+  overflow:hidden;
+}
+.login .pane-art{
+  position:relative;
+  background:
+    radial-gradient(120% 80% at 0% 100%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 60%),
+    radial-gradient(80% 60% at 100% 0%, color-mix(in srgb, var(--amber) 18%, transparent), transparent 70%),
+    var(--bg-sunk);
+  border-right:1px solid var(--hairline);
+  padding:48px;
+  display:flex; flex-direction:column; justify-content:space-between;
+}
+.login .pane-art .logo-big{
+  font-family:'Fraunces',serif;
+  font-weight:500;
+  font-size:54px;
+  line-height:1;
+  letter-spacing:-0.025em;
+}
+.login .pane-art .logo-big em{ font-style:italic; color:var(--accent); }
+.login .pane-art .pitch{
+  font-family:'Fraunces',serif;
+  font-size:28px;
+  line-height:1.25;
+  letter-spacing:-0.015em;
+  max-width:420px;
+  margin-top:36px;
+}
+.login .pane-art .pitch em{ font-style:italic; color:var(--accent); }
+.login .pane-art .quote{
+  font-family:'Fraunces',serif; font-style:italic;
+  border-left:1px solid var(--hairline-strong);
+  padding-left:18px;
+  max-width:360px;
+  color:var(--ink-soft);
+  font-size:14px;
+  line-height:1.6;
+}
+.login .pane-art .quote cite{
+  display:block; margin-top:10px;
+  font-style:normal;
+  font-family:'Geist',sans-serif;
+  font-size:11px; text-transform:uppercase; letter-spacing:0.12em;
+  color:var(--ink-mute);
+}
+
+.login .pane-form{
+  padding:56px 64px;
+  display:flex; flex-direction:column; justify-content:center;
+}
+.login h1{
+  font-family:'Fraunces',serif;
+  font-weight:500;
+  font-size:32px;
+  letter-spacing:-0.02em;
+  margin:0 0 6px;
+}
+.login h1 + p{ color:var(--ink-mute); margin:0 0 32px; font-size:14px; }
+
+.field{ display:flex; flex-direction:column; gap:6px; margin-bottom:18px; }
+.field label{ font-size:11px; text-transform:uppercase; letter-spacing:0.12em; color:var(--ink-mute); }
+.field input, .field select, .field textarea{
+  font-family:'Geist',sans-serif;
+  font-size:14px;
+  padding:11px 12px;
+  border:1px solid var(--hairline-strong);
+  background:var(--bg);
+  color:var(--ink);
+  outline:none;
+  transition: border-color .2s, background .2s;
+}
+.field input:focus, .field select:focus, .field textarea:focus{
+  border-color:var(--accent);
+  background: color-mix(in srgb, var(--accent-soft) 35%, var(--bg));
+}
+.login .row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; font-size:13px; }
+.login .row a{ color:var(--accent); text-decoration:none; border-bottom:1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
+.login .btn{ width:100%; padding:13px; font-size:14px; }
+.login .footnote{
+  margin-top:36px;
+  border-top:1px solid var(--hairline);
+  padding-top:18px;
+  display:flex; justify-content:space-between;
+  font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:var(--ink-mute);
+}
+
+/* ============================================================
+   3) KANBAN + DRAWER
+   ============================================================ */
+.kanban-wrap{
+  display:grid;
+  grid-template-columns: 1fr 460px;
+  gap:24px;
+  align-items:start;
+}
+.kanban-toolbar{
+  display:flex; align-items:center; gap:16px;
+  margin-bottom:16px;
+}
+.kanban-toolbar .seg{
+  display:flex; border:1px solid var(--hairline); background:var(--bg-elev);
+}
+.kanban-toolbar .seg button{
+  font-family:'Geist',sans-serif; font-size:12px;
+  padding:7px 14px; background:transparent; border:none; cursor:pointer;
+  color:var(--ink-soft);
+  border-right:1px solid var(--hairline);
+  letter-spacing:0.04em;
+}
+.kanban-toolbar .seg button:last-child{ border-right:none; }
+.kanban-toolbar .seg button.on{ background:var(--ink); color:var(--bg-elev); }
+
+.kanban{
+  display:grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap:14px;
+}
+.col{
+  background:transparent;
+  display:flex; flex-direction:column; min-height:520px;
+}
+.col-head{
+  display:flex; align-items:baseline; justify-content:space-between;
+  padding:0 4px 10px;
+  border-bottom:1px solid var(--hairline);
+  margin-bottom:12px;
+}
+.col-head .name{
+  font-family:'Geist',sans-serif;
+  font-size:11px; text-transform:uppercase; letter-spacing:0.14em;
+  color:var(--ink);
+  font-weight:500;
+}
+.col-head .count{
+  font-family:'Fraunces',serif; font-style:italic;
+  font-size:13px; color:var(--ink-mute);
+  font-variant-numeric:tabular-nums;
+}
+
+.card{
+  background:var(--bg-elev);
+  border:1px solid var(--hairline);
+  padding:12px 12px 10px;
+  margin-bottom:10px;
+  cursor:pointer;
+  transition: border-color .2s, transform .2s, box-shadow .2s, background .2s;
+}
+.card:hover{
+  border-color:var(--hairline-strong);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+.card.active{
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent-soft) 35%, var(--bg-elev));
+}
+.card .proto{
+  font-family:'Fraunces',serif;
+  font-size:11px; font-style:italic; color:var(--ink-mute);
+  font-variant-numeric:tabular-nums;
+  letter-spacing:0.02em;
+}
+.card .title{
+  font-family:'Fraunces',serif;
+  font-size:15px;
+  line-height:1.3;
+  margin:4px 0 10px;
+  letter-spacing:-0.01em;
+  color:var(--ink);
+}
+.card .who{
+  display:flex; align-items:center; gap:8px;
+  font-size:12px; color:var(--ink-soft);
+}
+.card .who .name-c{ font-weight:500; }
+.card .who .grp{ color:var(--ink-mute); font-family:'Fraunces',serif; font-style:italic; font-size:11px; }
+.card .foot-row{
+  display:flex; align-items:center; justify-content:space-between;
+  margin-top:10px;
+  padding-top:8px;
+  border-top:1px dashed var(--hairline);
+  font-size:11px;
+  color:var(--ink-mute);
+}
+.card .foot-row .time{ font-variant-numeric:tabular-nums; }
+
+/* Drawer */
+.drawer{
+  background:var(--bg-elev);
+  border:1px solid var(--hairline);
+  box-shadow: var(--shadow-md);
+  display:flex; flex-direction:column;
+  max-height:880px;
+}
+.drawer-head{
+  padding:22px 24px 18px;
+  border-bottom:1px solid var(--hairline);
+  position:relative;
+}
+.drawer-head .top{
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:10px;
+}
+.drawer-head .proto-big{
+  font-family:'Fraunces',serif;
+  font-weight:500;
+  font-size:30px;
+  letter-spacing:-0.02em;
+  line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+.drawer-head .proto-big em{ font-style:italic; color:var(--accent); font-weight:500; font-size:18px; vertical-align:6px; margin-left:6px;}
+.drawer-head h3{
+  font-family:'Fraunces',serif;
+  font-weight:500;
+  font-size:19px;
+  line-height:1.25;
+  margin:14px 0 14px;
+  letter-spacing:-0.01em;
+}
+.drawer-meta{
+  display:grid; grid-template-columns: repeat(3, 1fr);
+  gap:14px;
+  padding:14px 0 0;
+  border-top:1px solid var(--hairline);
+}
+.drawer-meta .cell .label{ display:block; margin-bottom:4px; }
+.drawer-meta .cell .val{ font-size:13px; color:var(--ink); }
+
+.thread{
+  padding:22px 24px;
+  overflow:auto;
+  display:flex; flex-direction:column; gap:18px;
+}
+.thread .day{
+  text-align:center;
+  font-family:'Fraunces',serif; font-style:italic;
+  font-size:12px; color:var(--ink-mute);
+  letter-spacing:0.04em;
+}
+.msg{
+  display:flex; gap:10px; max-width:88%;
+}
+.msg.client{ align-self:flex-start; }
+.msg.agent{ align-self:flex-end; flex-direction:row-reverse; }
+.msg .bubble{
+  border:1px solid var(--hairline);
+  background:var(--bubble-client);
+  padding:10px 12px;
+  font-size:13.5px; line-height:1.55;
+  color:var(--ink);
+}
+.msg.agent .bubble{
+  background:var(--bubble-agent);
+  border-color: color-mix(in srgb, var(--accent) 25%, var(--hairline));
+}
+.msg .meta{
+  display:flex; align-items:center; gap:8px;
+  font-size:10.5px; text-transform:uppercase; letter-spacing:0.12em;
+  color:var(--ink-mute);
+  margin-bottom:5px;
+}
+.msg.agent .meta{ justify-content:flex-end; }
+.msg .meta .who{ color:var(--ink-soft); font-weight:500; }
+.msg .meta .time{ font-variant-numeric:tabular-nums; letter-spacing:0.05em; text-transform:none; font-family:'Fraunces',serif; font-style:italic; font-size:11.5px;}
+.msg .image{
+  margin-top:8px;
+  border:1px solid var(--hairline-strong);
+  padding:4px;
+  background:var(--bg);
+  display:inline-block;
+}
+.msg .image img{ display:block; max-width:280px; height:auto; }
+.msg .image figcaption{
+  font-family:'Fraunces',serif; font-style:italic; font-size:11px;
+  color:var(--ink-mute); padding:6px 4px 2px;
+}
+
+.composer{
+  border-top:1px solid var(--hairline);
+  padding:14px 18px;
+  display:flex; flex-direction:column; gap:10px;
+  background: color-mix(in srgb, var(--bg) 50%, var(--bg-elev));
+}
+.composer textarea{
+  resize:none; min-height:64px;
+  border:1px solid var(--hairline);
+  background:var(--bg-elev);
+  font-family:'Geist',sans-serif; font-size:13.5px;
+  padding:10px 12px; color:var(--ink); outline:none;
+}
+.composer textarea:focus{ border-color:var(--accent); }
+.composer .row{ display:flex; align-items:center; justify-content:space-between; }
+.composer .row .actions{ display:flex; gap:6px; }
+.composer .hint{ font-family:'Fraunces',serif; font-style:italic; font-size:11.5px; color:var(--ink-mute); }
+
+/* ============================================================
+   4 & 5) CADASTROS (Tabs + Tabela + Form)
+   ============================================================ */
+.tabs{
+  display:flex; gap:0;
+  border-bottom:1px solid var(--hairline);
+  margin-bottom:24px;
+}
+.tabs a{
+  text-decoration:none;
+  padding:12px 22px 14px;
+  color:var(--ink-mute);
+  font-size:13px;
+  letter-spacing:0.04em;
+  border-bottom:1px solid transparent;
+  margin-bottom:-1px;
+  transition: color .2s, border-color .2s;
+  font-family:'Fraunces',serif;
+}
+.tabs a em{ font-family:'Fraunces',serif; font-style:italic; margin-right:6px; color:var(--ink-mute); font-size:11px; font-variant-numeric:tabular-nums;}
+.tabs a.on{ color:var(--ink); border-bottom-color:var(--accent); }
+.tabs a:hover{ color:var(--ink); }
+
+.cad-layout{
+  display:grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap:28px;
+  align-items:start;
+}
+.panel{
+  background:var(--bg-elev);
+  border:1px solid var(--hairline);
+  box-shadow:var(--shadow-sm);
+}
+.panel-head{
+  padding:16px 20px;
+  border-bottom:1px solid var(--hairline);
+  display:flex; align-items:baseline; justify-content:space-between;
+}
+.panel-head h3{
+  font-family:'Fraunces',serif; font-weight:500; font-size:17px;
+  letter-spacing:-0.01em;
+  margin:0;
+}
+.panel-head .hint{ font-family:'Fraunces',serif; font-style:italic; font-size:12px; color:var(--ink-mute);}
+
+table.t{
+  width:100%; border-collapse:collapse;
+  font-size:13px;
+}
+table.t thead th{
+  text-align:left;
+  font-size:10.5px; text-transform:uppercase; letter-spacing:0.12em;
+  font-weight:500;
+  color:var(--ink-mute);
+  padding:14px 16px;
+  border-bottom:1px solid var(--hairline);
+  background: color-mix(in srgb, var(--bg-sunk) 40%, var(--bg-elev));
+}
+table.t tbody td{
+  padding:13px 16px;
+  border-bottom:1px solid var(--hairline);
+  color:var(--ink);
+  vertical-align:middle;
+}
+table.t tbody tr:nth-child(even) td{ background: color-mix(in srgb, var(--bg-sunk) 20%, var(--bg-elev)); }
+table.t tbody tr:hover td{ background: color-mix(in srgb, var(--accent-soft) 25%, var(--bg-elev)); }
+table.t tbody tr.selected td{
+  background: color-mix(in srgb, var(--accent-soft) 50%, var(--bg-elev));
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+td.code, th.code{ font-variant-numeric:tabular-nums; color:var(--ink-soft); width:90px;}
+td.right{ text-align:right; }
+.row-actions{
+  display:inline-flex; gap:2px;
+  opacity:0.55;
+  transition:opacity .2s;
+}
+tr:hover .row-actions{ opacity:1; }
+.ico{
+  width:28px; height:28px;
+  display:inline-flex; align-items:center; justify-content:center;
+  border:1px solid transparent;
+  cursor:pointer; color:var(--ink-soft);
+  transition: border-color .15s, color .15s, background .15s;
+}
+.ico:hover{ border-color:var(--hairline-strong); color:var(--ink); background:var(--bg); }
+.ico.danger:hover{ color:var(--danger); border-color: color-mix(in srgb, var(--danger) 40%, var(--hairline)); }
+
+.table-foot{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 20px;
+  border-top:1px solid var(--hairline);
+  background: color-mix(in srgb, var(--bg-sunk) 30%, var(--bg-elev));
+}
+.pager{ display:flex; gap:6px; }
+.pager .p{
+  width:28px; height:28px;
+  display:inline-flex; align-items:center; justify-content:center;
+  border:1px solid var(--hairline); color:var(--ink-soft);
+  font-size:12px; font-variant-numeric:tabular-nums; cursor:pointer;
+}
+.pager .p.on{ background:var(--ink); color:var(--bg-elev); border-color:var(--ink); }
+
+/* Form */
+.form-head{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:18px 22px;
+  border-bottom:1px solid var(--hairline);
+}
+.form-head .mode{
+  font-family:'Fraunces',serif; font-style:italic; font-size:12px;
+  color:var(--accent);
+  letter-spacing:0.04em;
+}
+.form-head h3{
+  font-family:'Fraunces',serif; font-weight:500;
+  font-size:22px; letter-spacing:-0.015em;
+  margin:4px 0 0;
+}
+.form-body{ padding:22px; display:grid; grid-template-columns: 1fr 1fr; gap:16px 20px; }
+.form-body .full{ grid-column: 1 / -1; }
+.form-foot{
+  padding:16px 22px;
+  border-top:1px solid var(--hairline);
+  display:flex; align-items:center; justify-content:space-between;
+  background: color-mix(in srgb, var(--bg-sunk) 25%, var(--bg-elev));
+}
+.form-foot .note{ font-family:'Fraunces',serif; font-style:italic; font-size:12px; color:var(--ink-mute);}
+.form-foot .actions{ display:flex; gap:10px; }
+
+/* Perfil chip */
+.perfil{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:4px 10px 4px 4px;
+  border:1px solid var(--hairline);
+  background:var(--bg);
+}
+.perfil .dot{ width:8px; height:8px; border-radius:50%; background:var(--ink-mute); }
+.perfil.atendente .dot{ background:var(--info); }
+.perfil.supervisor .dot{ background:var(--amber); }
+.perfil.admin .dot{ background:var(--accent); }
+.perfil span{ font-size:11.5px; text-transform:uppercase; letter-spacing:0.1em; color:var(--ink-soft); }
+
+/* Footnote pagination */
+.foot-page{
+  display:flex; align-items:center; justify-content:space-between;
+  margin-top:18px;
+  border-top:1px solid var(--hairline);
+  padding-top:10px;
+  font-family:'Fraunces',serif; font-style:italic;
+  color:var(--ink-mute);
+  font-size:12px;
+}
+.foot-page .left{ font-variant-numeric:tabular-nums; letter-spacing:0.04em; }
+.foot-page .right{ }
+
+/* Inline icons (no external lib) */
+.i{ width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
+.i.sm{ width:14px; height:14px; }
+.i.lg{ width:18px; height:18px; }
+
+/* Responsive guardrails */
+@media (max-width: 1200px){
+  .kanban{ grid-template-columns: repeat(3, 1fr); }
+  .kanban-wrap{ grid-template-columns: 1fr; }
+  .notes-body{ grid-template-columns:1fr; }
+  .login{ grid-template-columns: 1fr; }
+  .cad-layout{ grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ============== DESIGN NOTES ============== -->
+  <details class="notes" open>
+    <summary>
+      <span class="serif" style="font-size:18px; font-weight:500;">THOR-HelpDesk <em style="font-style:italic; color:var(--accent)">— redesign</em></span>
+      <span class="smallcaps" style="margin-left:14px;">Design notes · v0.1</span>
+      <span class="foot" style="margin-left:auto;">Maio · 2026</span>
+      <svg class="i chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+    </summary>
+    <div class="notes-body">
+      <div>
+        <h4>Paleta — corporate quente</h4>
+        <p>Parchment <code>#F4EFE6</code> e warm white <code>#FBF7EF</code>, ink quase preto <code>#1B1815</code>. Accent terracota <code>#B5532B</code> com complemento âmbar <code>#C97B2A</code>. Status em verde-oliva, info azul-petróleo, alerta âmbar. Dark mode: charcoal warm <code>#161310</code> com texto off-white.</p>
+        <div class="swatches">
+          <div class="sw" style="background:#F4EFE6"></div>
+          <div class="sw" style="background:#FBF7EF"></div>
+          <div class="sw" style="background:#B5532B"></div>
+          <div class="sw" style="background:#C97B2A"></div>
+          <div class="sw" style="background:#4F6B3B"></div>
+          <div class="sw" style="background:#1B1815"></div>
+        </div>
+      </div>
+      <div>
+        <h4>Tipografia — par editorial</h4>
+        <p><b>Fraunces</b> (display serif variable, opsz dinâmica) para títulos, protocolos e numerais grandes. <b>Geist</b> (sans humanista) para UI, labels e corpo. Numerais tabular-nums em tabelas e badges. Smallcaps com tracking +0.12em em rótulos. Itálico serif em legendas, footnotes e modos.</p>
+      </div>
+      <div>
+        <h4>Princípios editoriais</h4>
+        <p>Filetes 1px hairline em vez de sombras pesadas. Sem cantos arredondados nas bubbles do thread (estilo carta). Asterisco decorativo entre seções. Paginação "001 / 247" no rodapé. Cards Kanban com borda fina, hover sutil e tag de status em pílula dessaturada. Grain SVG global a 3-4% para textura de papel.</p>
+      </div>
+    </div>
+  </details>
+
+  <!-- ============== 1) LOGIN ============== -->
+  <section class="screen" id="screen-login">
+    <div class="screen-head">
+      <span class="num">i.</span>
+      <h2>Entrada</h2>
+      <span class="meta foot">Login · /auth/signin</span>
+    </div>
+
+    <div class="login">
+      <aside class="pane-art">
+        <div>
+          <div class="logo-big">Thor<em>·</em>Desk</div>
+          <div class="smallcaps" style="margin-top:10px;">Suporte WinThor — TOTVS</div>
+        </div>
+        <div class="pitch">
+          Atendimento de ERP no ritmo do <em>WhatsApp</em>, organizado como uma redação.
+        </div>
+        <div class="quote">
+          “Reduzimos o tempo médio de primeira resposta de 38 minutos para 6 ao mover o suporte do e-mail para um Kanban acoplado ao WhatsApp.”
+          <cite>— Equipe Thor Consultoria, piloto Q1·26</cite>
+        </div>
+      </aside>
+
+      <div class="pane-form">
+        <h1>Bem-vindo de volta.</h1>
+        <p>Entre com sua conta corporativa Thor.</p>
+
+        <div class="field">
+          <label for="em">E-mail corporativo</label>
+          <input id="em" type="email" value="gilberg@thorconsultoria.com.br" />
+        </div>
+        <div class="field">
+          <label for="pw">Senha</label>
+          <input id="pw" type="password" value="••••••••••••" />
+        </div>
+
+        <div class="row">
+          <label style="display:inline-flex; align-items:center; gap:8px; font-size:13px; color:var(--ink-soft);">
+            <input type="checkbox" checked /> Manter conectado
+          </label>
+          <a href="#">Esqueci a senha</a>
+        </div>
+
+        <button class="btn">Entrar no painel</button>
+
+        <div class="footnote">
+          <span>v 2.4.0 · ambiente prod</span>
+          <span>SSO Microsoft · em breve</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot-page">
+      <span class="left">001 / 247</span>
+      <span class="right">i. Entrada</span>
+    </div>
+  </section>
+
+  <div class="divider-asterisk">* &nbsp; * &nbsp; *</div>
+
+  <!-- ============== 2) GLOBAL HEADER ============== -->
+  <section class="screen" id="screen-header">
+    <div class="screen-head">
+      <span class="num">ii.</span>
+      <h2>Header global</h2>
+      <span class="meta foot">Componente persistente · app shell</span>
+    </div>
+
+    <div class="gheader">
+      <div class="brand">
+        <div class="mark">Thor<em>·</em>Desk</div>
+        <div class="tag-brand tag" style="border:none; color:var(--ink-mute); padding:0; letter-spacing:0.14em;">SUPORTE WINTHOR</div>
+      </div>
+      <nav class="nav">
+        <a href="#" class="active">Atendimento</a>
+        <a href="#">Cadastros</a>
+        <a href="#">Relatórios</a>
+        <a href="#">Integrações</a>
+        <a href="#">Configurações</a>
+      </nav>
+      <div class="right">
+        <div class="search">
+          <svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <span>Buscar protocolo, cliente ou grupo…</span>
+          <kbd>⌘ K</kbd>
+        </div>
+        <button class="icon-btn" title="Notificações">
+          <svg class="i" viewBox="0 0 24 24"><path d="M6 8a6 6 0 1112 0c0 7 3 7 3 9H3c0-2 3-2 3-9z"/><path d="M10 21a2 2 0 004 0"/></svg>
+        </button>
+        <button class="icon-btn" id="themeToggle" title="Alternar tema">
+          <svg class="i" id="iconSun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+          <svg class="i" id="iconMoon" viewBox="0 0 24 24" style="display:none"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        </button>
+        <div class="avatar" title="Gilberg Pinheiro">GP</div>
+      </div>
+    </div>
+    <div class="foot-page">
+      <span class="left">002 / 247</span>
+      <span class="right">ii. Header global</span>
+    </div>
+  </section>
+
+  <div class="divider-asterisk">* &nbsp; * &nbsp; *</div>
+
+  <!-- ============== 3) KANBAN + DRAWER ============== -->
+  <section class="screen" id="screen-kanban">
+    <div class="screen-head">
+      <span class="num">iii.</span>
+      <h2>Quadro de atendimento</h2>
+      <span class="meta foot">Kanban · drawer aberto · protocolo 20260519-00037</span>
+    </div>
+
+    <div class="kanban-toolbar">
+      <div class="seg">
+        <button class="on">Todos</button>
+        <button>Meus</button>
+        <button>Equipe</button>
+        <button>Não atribuídos</button>
+      </div>
+      <div class="tag">
+        <span class="dot"></span>
+        <span>Filtro · Grupo Thor Suporte ON</span>
+      </div>
+      <div style="margin-left:auto; display:flex; gap:8px;">
+        <button class="btn ghost sm">
+          <svg class="i sm" viewBox="0 0 24 24" style="margin-right:6px; vertical-align:-2px"><path d="M3 6h18M6 12h12M10 18h4"/></svg>
+          Filtros
+        </button>
+        <button class="btn sm">
+          <svg class="i sm" viewBox="0 0 24 24" style="margin-right:6px; vertical-align:-2px"><path d="M12 5v14M5 12h14"/></svg>
+          Novo ticket
+        </button>
+      </div>
+    </div>
+
+    <div class="kanban-wrap">
+      <div class="kanban">
+
+        <!-- COL novo -->
+        <div class="col">
+          <div class="col-head">
+            <span class="name">Novo</span>
+            <span class="count">04</span>
+          </div>
+
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="proto">№ 20260519-00041</span>
+              <span class="tag novo"><span class="dot"></span>Novo</span>
+            </div>
+            <div class="title">NF-e rejeitada — rejeição 539 ao transmitir lote</div>
+            <div class="who">
+              <div class="avatar xs">MJ</div>
+              <div>
+                <div class="name-c">Marcos Júnior</div>
+                <div class="grp">Distribuidora Aurora</div>
+              </div>
+            </div>
+            <div class="foot-row">
+              <span class="priority alta">↑ alta</span>
+              <span class="time">há 2 min</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="proto">№ 20260519-00040</span>
+              <span class="tag novo"><span class="dot"></span>Novo</span>
+            </div>
+            <div class="title">Pedido não consta no faturamento — rotina 2030</div>
+            <div class="who">
+              <div class="avatar xs">RC</div>
+              <div>
+                <div class="name-c">Rita Câmara</div>
+                <div class="grp">Mercantil Boa Vista</div>
+              </div>
+            </div>
+            <div class="foot-row">
+              <span class="priority media">— média</span>
+              <span class="time">há 11 min</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="proto">№ 20260519-00039</span>
+              <span class="tag novo"><span class="dot"></span>Novo</span>
+            </div>
+            <div class="title">Travamento da rotina 1117 ao acumular custos</div>
+            <div class="who">
+              <div class="avatar xs">FA</div>
+              <div>
+                <div class="name-c">Felipe Andrade</div>
+                <div class="grp">Atacadão Sertanejo</div>
+              </div>
+            </div>
+            <div class="foot-row">
+              <span class="priority media">— média</span>
+              <span class="time">há 26 min</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- COL triagem -->
+        <div class="col">
+          <div class="col-head">
+            <span class="name">Triagem</span>
+            <span class="count">03</span>
+          </div>
+
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="proto">№ 20260519-00038</span>
+              <span class="tag triagem"><span class="dot"></span>Triagem</span>
+            </div>
+            <div class="title">Divergência de estoque entre filial 01 e 03</div>
+            <div class="who">
+              <div class="avatar xs">CL</div>
+              <div>
+                <div class="name-c">Carla Lemos</div>
+                <div class="grp">Pague Bem Supermercados</div>
+              </div>
+            </div>
+            <div class="foot-row">
+              <span class="priority alta">↑ alta</span>
+              <span class="time">há 42 min</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="proto">№ 20260519-00036</span>
+              <span class="tag triagem"><span class="dot"></span>Triagem</span>
+            </div>
+            <div class="title">Importação SPED Fiscal — bloco K incompleto</div>
+            <div class="who">
+              <div class="avatar xs">EB</div>
+              <div>
+                <div class="name-c">Eliane Bittencourt</div>
+                <div class="grp">Cliente Demonstração WinThor</div>
+              </div>
+            </div>
+            <div class="foot-row">
+              <span class="priority media">— média</span>
+              <span class="time">há 1 h</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- COL em atendimento -->
+        <div class="col">
+          <div class="col-head">
+            <span class="name">Em atendimento</span>
+            <span class="count">05</span>
+          </div>
+
+          <div class="card active">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="proto">№ 20260519-00037</span>
+              <span class="tag atend"><span class="dot"></span>Em atend.</span>
+            </div>
+            <div class="title">Erro ao gerar pedido de venda — rotina 316 retorna “tributação inválida”</div>
+            <div class="who">
+              <div class="avatar xs">JS</div>
+              <div>
+                <div class="name-c">Juliana Sá</div>
+                <div class="grp">Cliente Demonstração WinThor</div>
+              </div>
+            </div>
+            <div class="foot-row">
+              <span class="priority alta">↑ alta</span>
+              <span class="time">há 8 min</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="proto">№ 20260519-00034</span>
+              <span class="tag atend"><span class="dot"></span>Em atend.</span>
+            </div>
+            <div class="title">Conciliação bancária — rotina 1310 ignora retorno CNAB</div>
+            <div class="who">
+              <div class="avatar xs">PM</div>
+              <div>
+                <div class="name-c">Paulo Marques</div>
+                <div class="grp">Drogaria Vida Plena</div>
+              </div>
+            </div>
+            <div class="foot-row">
+              <span class="priority media">— média</span>
+              <span class="time">há 1 h</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="proto">№ 20260519-00031</span>
+              <span class="tag atend"><span class="dot"></span>Em atend.</span>
+            </div>
+            <div class="title">Painel BI — venda por vendedor não bate com 1414</div>
+            <div class="who">
+              <div class="avatar xs">VR</div>
+              <div>
+                <div class="name-c">Vinícius Rosa</div>
+                <div class="grp">Atacado Nova Era</div>
+              </div>
+            </div>
+            <div class="foot-row">
+              <span class="priority baixa">↓ baixa</span>
+              <span class="time">há 2 h</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- COL aguardando cliente -->
+        <div class="col">
+          <div class="col-head">
+            <span class="name">Aguard. cliente</span>
+            <span class="count">02</span>
+          </div>
+
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="proto">№ 20260519-00029</span>
+              <span class="tag cliente"><span class="dot"></span>Aguard.</span>
+            </div>
+            <div class="title">Aguardando print da tela de erro 1090</div>
+            <div class="who">
+              <div class="avatar xs">HG</div>
+              <div>
+                <div class="name-c">Helena Gomes</div>
+                <div class="grp">Supermercado União</div>
+              </div>
+            </div>
+            <div class="foot-row">
+              <span class="priority media">— média</span>
+              <span class="time">há 3 h</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="proto">№ 20260519-00024</span>
+              <span class="tag cliente"><span class="dot"></span>Aguard.</span>
+            </div>
+            <div class="title">Validação do usuário fiscal pelo cliente</div>
+            <div class="who">
+              <div class="avatar xs">RT</div>
+              <div>
+                <div class="name-c">Ricardo Teles</div>
+                <div class="grp">Distribuidora Aurora</div>
+              </div>
+            </div>
+            <div class="foot-row">
+              <span class="priority baixa">↓ baixa</span>
+              <span class="time">há 5 h</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- COL resolvido -->
+        <div class="col">
+          <div class="col-head">
+            <span class="name">Resolvido</span>
+            <span class="count">07</span>
+          </div>
+
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="proto">№ 20260519-00021</span>
+              <span class="tag resolvido"><span class="dot"></span>Resolvido</span>
+            </div>
+            <div class="title">Backup automático configurado na filial matriz</div>
+            <div class="who">
+              <div class="avatar xs">LS</div>
+              <div>
+                <div class="name-c">Lucas Silveira</div>
+                <div class="grp">Mercantil Boa Vista</div>
+              </div>
+            </div>
+            <div class="foot-row">
+              <span class="priority baixa">↓ baixa</span>
+              <span class="time">há 6 h</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="proto">№ 20260518-00198</span>
+              <span class="tag resolvido"><span class="dot"></span>Resolvido</span>
+            </div>
+            <div class="title">Rotina 2003 — script de correção aplicado</div>
+            <div class="who">
+              <div class="avatar xs">AN</div>
+              <div>
+                <div class="name-c">Aline Nogueira</div>
+                <div class="grp">Cliente Demonstração WinThor</div>
+              </div>
+            </div>
+            <div class="foot-row">
+              <span class="priority media">— média</span>
+              <span class="time">ontem</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- COL fechado -->
+        <div class="col">
+          <div class="col-head">
+            <span class="name">Fechado</span>
+            <span class="count">42</span>
+          </div>
+
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="proto">№ 20260518-00187</span>
+              <span class="tag fechado"><span class="dot"></span>Fechado</span>
+            </div>
+            <div class="title">Liberação de usuário fiscal — concluído</div>
+            <div class="who">
+              <div class="avatar xs">DV</div>
+              <div>
+                <div class="name-c">Daniel Veras</div>
+                <div class="grp">Drogaria Vida Plena</div>
+              </div>
+            </div>
+            <div class="foot-row">
+              <span class="priority baixa">↓ baixa</span>
+              <span class="time">ontem</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="proto">№ 20260517-00154</span>
+              <span class="tag fechado"><span class="dot"></span>Fechado</span>
+            </div>
+            <div class="title">Treinamento rotina 1117 — sessão única</div>
+            <div class="who">
+              <div class="avatar xs">SC</div>
+              <div>
+                <div class="name-c">Sandra Coelho</div>
+                <div class="grp">Atacado Nova Era</div>
+              </div>
+            </div>
+            <div class="foot-row">
+              <span class="priority baixa">↓ baixa</span>
+              <span class="time">17/05</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ============ DRAWER ============ -->
+      <aside class="drawer">
+        <div class="drawer-head">
+          <div class="top">
+            <span class="smallcaps">Protocolo</span>
+            <div style="display:flex; gap:6px;">
+              <button class="icon-btn" title="Anexar"><svg class="i" viewBox="0 0 24 24"><path d="M21 12l-9 9a5 5 0 01-7-7l9-9a3.5 3.5 0 015 5l-9 9a2 2 0 01-3-3l8-8"/></svg></button>
+              <button class="icon-btn" title="Mais"><svg class="i" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>
+              <button class="icon-btn" title="Fechar"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+            </div>
+          </div>
+          <div class="proto-big tnum">20260519-00037<em>v.2</em></div>
+          <h3>Erro ao gerar pedido de venda — rotina 316 retorna “tributação inválida” em itens com substituição tributária.</h3>
+
+          <div class="drawer-meta">
+            <div class="cell">
+              <span class="label">Cliente</span>
+              <span class="val">Cliente Demonstração WinThor</span>
+            </div>
+            <div class="cell">
+              <span class="label">Grupo WhatsApp</span>
+              <span class="val">Thor Suporte ON</span>
+            </div>
+            <div class="cell">
+              <span class="label">Status</span>
+              <span class="val"><span class="tag atend" style="padding:2px 8px;"><span class="dot"></span>Em atendimento</span></span>
+            </div>
+            <div class="cell">
+              <span class="label">Atendente</span>
+              <span class="val" style="display:flex; align-items:center; gap:8px;"><span class="avatar xs">GP</span> Gilberg Pinheiro</span>
+            </div>
+            <div class="cell">
+              <span class="label">Prioridade</span>
+              <span class="val priority alta">↑ alta</span>
+            </div>
+            <div class="cell">
+              <span class="label">Aberto em</span>
+              <span class="val tnum">19/05 · 09:42</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="thread">
+          <div class="day">— terça, 19 de maio —</div>
+
+          <div class="msg client">
+            <div class="avatar sm">JS</div>
+            <div>
+              <div class="meta"><span class="who">Juliana Sá · Cliente</span><span class="time">09:42</span></div>
+              <div class="bubble">
+                Bom dia! Estou tentando emitir um pedido na rotina 316 e dá esse erro de “tributação inválida” em todos os itens com ST. Já validei a 514 e está parametrizada. Pode me ajudar?
+              </div>
+            </div>
+          </div>
+
+          <div class="msg client">
+            <div class="avatar sm">JS</div>
+            <div>
+              <div class="meta"><span class="who">Juliana Sá · Cliente</span><span class="time">09:43</span></div>
+              <div class="bubble">
+                Segue o print da tela de erro:
+                <figure class="image" style="margin-bottom:0">
+                  <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400" alt="Print da tela do erro" />
+                  <figcaption>print · rotina 316 · cliente 1042 · item 88293</figcaption>
+                </figure>
+              </div>
+            </div>
+          </div>
+
+          <div class="msg agent">
+            <div class="avatar sm">GP</div>
+            <div>
+              <div class="meta"><span class="time">09:51</span><span class="who">Gilberg · Suporte WinThor</span></div>
+              <div class="bubble">
+                Oi Juliana, bom dia. Recebi o print, obrigado. O erro aponta para o cadastro de ST na rotina <b>514 · aba “ICMS por UF”</b>. Pode confirmar se o campo <i>“Aliq. ST destino”</i> está preenchido para o estado de destino do pedido (PE)? Vou abrir aqui em paralelo a rotina 4112 para validar o cadastro do item.
+              </div>
+            </div>
+          </div>
+
+          <div class="msg agent">
+            <div class="avatar sm">GP</div>
+            <div>
+              <div class="meta"><span class="time">09:52</span><span class="who">Gilberg · Suporte WinThor</span></div>
+              <div class="bubble">
+                Enquanto isso — em qual versão do WinThor vocês estão? <span class="foot">(28.x ou 31.x?)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="composer">
+          <textarea placeholder="Escreva uma resposta para o cliente…"></textarea>
+          <div class="row">
+            <div class="actions">
+              <button class="icon-btn" title="Anexo"><svg class="i" viewBox="0 0 24 24"><path d="M21 12l-9 9a5 5 0 01-7-7l9-9a3.5 3.5 0 015 5l-9 9a2 2 0 01-3-3l8-8"/></svg></button>
+              <button class="icon-btn" title="Snippets"><svg class="i" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-3"/><path d="M14 3h7v7"/><path d="M10 14L21 3"/></svg></button>
+              <button class="icon-btn" title="Resposta interna"><svg class="i" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></button>
+            </div>
+            <div style="display:flex; align-items:center; gap:14px;">
+              <span class="hint">Enter envia · Shift+Enter quebra linha</span>
+              <button class="btn sm">Enviar resposta</button>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="foot-page">
+      <span class="left">037 / 247</span>
+      <span class="right">iii. Quadro de atendimento</span>
+    </div>
+  </section>
+
+  <div class="divider-asterisk">* &nbsp; * &nbsp; *</div>
+
+  <!-- ============== 4) CADASTROS · CLIENTES ============== -->
+  <section class="screen" id="screen-cad-clientes">
+    <div class="screen-head">
+      <span class="num">iv.</span>
+      <h2>Cadastros — Clientes</h2>
+      <span class="meta foot">/cadastros/clientes · modo edição</span>
+    </div>
+
+    <div class="tabs">
+      <a href="#" class="on"><em>01</em>Clientes</a>
+      <a href="#"><em>02</em>Atendentes</a>
+      <a href="#"><em>03</em>Grupos WhatsApp</a>
+      <a href="#"><em>04</em>Categorias</a>
+      <a href="#"><em>05</em>SLA</a>
+    </div>
+
+    <div class="cad-layout">
+      <!-- Tabela -->
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h3>Clientes cadastrados</h3>
+            <span class="hint">— 24 ativos, 3 inativos</span>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <div class="search" style="min-width:220px;">
+              <svg class="i sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+              <span>Buscar cliente…</span>
+            </div>
+            <button class="btn sm">
+              <svg class="i sm" viewBox="0 0 24 24" style="margin-right:6px; vertical-align:-2px"><path d="M12 5v14M5 12h14"/></svg>
+              Novo
+            </button>
+          </div>
+        </div>
+
+        <table class="t">
+          <thead>
+            <tr>
+              <th class="code">Código</th>
+              <th>Razão social</th>
+              <th>Grupo WhatsApp</th>
+              <th>Versão WinThor</th>
+              <th style="text-align:right;">Tickets abertos</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="code tnum">0001</td>
+              <td>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <span class="avatar sm">CD</span>
+                  <div>
+                    <div style="font-weight:500;">Cliente Demonstração WinThor</div>
+                    <div class="foot" style="font-size:11px;">demo@thorconsultoria.com.br</div>
+                  </div>
+                </div>
+              </td>
+              <td>Thor Suporte ON</td>
+              <td class="tnum">31.8.2</td>
+              <td class="right tnum">04</td>
+              <td class="right">
+                <div class="row-actions">
+                  <button class="ico" title="Editar"><svg class="i sm" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
+                  <button class="ico danger" title="Excluir"><svg class="i sm" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+                </div>
+              </td>
+            </tr>
+
+            <tr class="selected">
+              <td class="code tnum">0002</td>
+              <td>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <span class="avatar sm" style="background:linear-gradient(140deg,#4F6B3B,#7A8E5C)">DA</span>
+                  <div>
+                    <div style="font-weight:500;">Distribuidora Aurora Ltda.</div>
+                    <div class="foot" style="font-size:11px;">ti@auroradist.com.br</div>
+                  </div>
+                </div>
+              </td>
+              <td>Aurora · Suporte Thor</td>
+              <td class="tnum">31.8.1</td>
+              <td class="right tnum">07</td>
+              <td class="right">
+                <div class="row-actions" style="opacity:1;">
+                  <button class="ico" title="Editar"><svg class="i sm" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
+                  <button class="ico danger" title="Excluir"><svg class="i sm" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+                </div>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="code tnum">0003</td>
+              <td>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <span class="avatar sm" style="background:linear-gradient(140deg,#3B5A6B,#6F8B9C)">MB</span>
+                  <div>
+                    <div style="font-weight:500;">Mercantil Boa Vista S.A.</div>
+                    <div class="foot" style="font-size:11px;">ti.boavista@mercantilbv.com</div>
+                  </div>
+                </div>
+              </td>
+              <td>BV · Atendimento</td>
+              <td class="tnum">28.4.7</td>
+              <td class="right tnum">02</td>
+              <td class="right">
+                <div class="row-actions">
+                  <button class="ico" title="Editar"><svg class="i sm" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
+                  <button class="ico danger" title="Excluir"><svg class="i sm" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+                </div>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="code tnum">0004</td>
+              <td>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <span class="avatar sm" style="background:linear-gradient(140deg,#9A6B1F,#C97B2A)">DV</span>
+                  <div>
+                    <div style="font-weight:500;">Drogaria Vida Plena</div>
+                    <div class="foot" style="font-size:11px;">suporte@vidaplena.com.br</div>
+                  </div>
+                </div>
+              </td>
+              <td>Vida Plena · TI</td>
+              <td class="tnum">31.7.9</td>
+              <td class="right tnum">01</td>
+              <td class="right">
+                <div class="row-actions">
+                  <button class="ico" title="Editar"><svg class="i sm" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
+                  <button class="ico danger" title="Excluir"><svg class="i sm" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+                </div>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="code tnum">0005</td>
+              <td>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <span class="avatar sm" style="background:linear-gradient(140deg,#8C2B22,#B5532B)">AS</span>
+                  <div>
+                    <div style="font-weight:500;">Atacadão Sertanejo</div>
+                    <div class="foot" style="font-size:11px;">ti@sertanejoatacado.com</div>
+                  </div>
+                </div>
+              </td>
+              <td>Sertanejo · Suporte</td>
+              <td class="tnum">31.8.2</td>
+              <td class="right tnum">03</td>
+              <td class="right">
+                <div class="row-actions">
+                  <button class="ico" title="Editar"><svg class="i sm" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
+                  <button class="ico danger" title="Excluir"><svg class="i sm" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+                </div>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="code tnum">0006</td>
+              <td>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <span class="avatar sm" style="background:linear-gradient(140deg,#4F6B3B,#93AE73)">PB</span>
+                  <div>
+                    <div style="font-weight:500;">Pague Bem Supermercados</div>
+                    <div class="foot" style="font-size:11px;">ti@paguebem.com.br</div>
+                  </div>
+                </div>
+              </td>
+              <td>Pague Bem · Thor</td>
+              <td class="tnum">28.5.1</td>
+              <td class="right tnum">05</td>
+              <td class="right">
+                <div class="row-actions">
+                  <button class="ico" title="Editar"><svg class="i sm" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
+                  <button class="ico danger" title="Excluir"><svg class="i sm" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+                </div>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="code tnum">0007</td>
+              <td>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <span class="avatar sm" style="background:linear-gradient(140deg,#3B5A6B,#8AB0C2)">SU</span>
+                  <div>
+                    <div style="font-weight:500;">Supermercado União</div>
+                    <div class="foot" style="font-size:11px;">contato@supuniao.com.br</div>
+                  </div>
+                </div>
+              </td>
+              <td>União · Atendimento</td>
+              <td class="tnum">31.7.4</td>
+              <td class="right tnum">02</td>
+              <td class="right">
+                <div class="row-actions">
+                  <button class="ico" title="Editar"><svg class="i sm" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
+                  <button class="ico danger" title="Excluir"><svg class="i sm" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="table-foot">
+          <span class="foot">Exibindo 1 — 7 de 27</span>
+          <div class="pager">
+            <span class="p">‹</span>
+            <span class="p on">1</span>
+            <span class="p">2</span>
+            <span class="p">3</span>
+            <span class="p">4</span>
+            <span class="p">›</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- FORM EDIÇÃO -->
+      <div class="panel">
+        <div class="form-head">
+          <div>
+            <div class="mode">— editando registro 0002</div>
+            <h3>Distribuidora Aurora Ltda.</h3>
+          </div>
+          <span class="tag resolvido"><span class="dot"></span>Ativo</span>
+        </div>
+
+        <div class="form-body">
+          <div class="field">
+            <label>Código</label>
+            <input value="0002" disabled style="opacity:.7" />
+          </div>
+          <div class="field">
+            <label>CNPJ</label>
+            <input value="12.345.678/0001-90" />
+          </div>
+
+          <div class="field full">
+            <label>Razão social</label>
+            <input value="Distribuidora Aurora Ltda." />
+          </div>
+
+          <div class="field full">
+            <label>Nome fantasia</label>
+            <input value="Aurora Distribuição" />
+          </div>
+
+          <div class="field">
+            <label>E-mail técnico</label>
+            <input value="ti@auroradist.com.br" />
+          </div>
+          <div class="field">
+            <label>Telefone</label>
+            <input value="(81) 98765-4321" />
+          </div>
+
+          <div class="field">
+            <label>Grupo WhatsApp</label>
+            <select>
+              <option>Aurora · Suporte Thor</option>
+              <option>Thor Suporte ON</option>
+              <option>BV · Atendimento</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Versão WinThor</label>
+            <select>
+              <option>31.8.2</option>
+              <option selected>31.8.1</option>
+              <option>28.5.1</option>
+              <option>28.4.7</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>SLA aplicado</label>
+            <select>
+              <option>Premium · 4h úteis</option>
+              <option>Standard · 8h úteis</option>
+              <option>Básico · 24h</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Atendente padrão</label>
+            <select>
+              <option>Gilberg Pinheiro</option>
+              <option>Mariana Castro</option>
+              <option>Bruno Tavares</option>
+            </select>
+          </div>
+
+          <div class="field full">
+            <label>Observações</label>
+            <textarea rows="3">Cliente com 6 filiais. Janela de atendimento preferencial: 08h–17h. Contato escalado: Gerente de TI Renato Aurora.</textarea>
+          </div>
+        </div>
+
+        <div class="form-foot">
+          <span class="note">Última atualização — 18/05 · 16:32 por Gilberg P.</span>
+          <div class="actions">
+            <button class="btn ghost">Cancelar</button>
+            <button class="btn">Salvar alterações</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot-page">
+      <span class="left">128 / 247</span>
+      <span class="right">iv. Cadastros · clientes</span>
+    </div>
+  </section>
+
+  <div class="divider-asterisk">* &nbsp; * &nbsp; *</div>
+
+  <!-- ============== 5) CADASTROS · ATENDENTES ============== -->
+  <section class="screen" id="screen-cad-atendentes">
+    <div class="screen-head">
+      <span class="num">v.</span>
+      <h2>Cadastros — Atendentes</h2>
+      <span class="meta foot">/cadastros/atendentes · permissões e perfis</span>
+    </div>
+
+    <div class="tabs">
+      <a href="#"><em>01</em>Clientes</a>
+      <a href="#" class="on"><em>02</em>Atendentes</a>
+      <a href="#"><em>03</em>Grupos WhatsApp</a>
+      <a href="#"><em>04</em>Categorias</a>
+      <a href="#"><em>05</em>SLA</a>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h3>Equipe Thor Consultoria</h3>
+          <span class="hint">— 9 atendentes ativos · 2 supervisores · 1 administrador</span>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <div class="search" style="min-width:220px;">
+            <svg class="i sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <span>Buscar atendente…</span>
+          </div>
+          <button class="btn ghost sm">
+            <svg class="i sm" viewBox="0 0 24 24" style="margin-right:6px; vertical-align:-2px"><path d="M3 6h18M6 12h12M10 18h4"/></svg>
+            Filtrar perfil
+          </button>
+          <button class="btn sm">
+            <svg class="i sm" viewBox="0 0 24 24" style="margin-right:6px; vertical-align:-2px"><path d="M12 5v14M5 12h14"/></svg>
+            Novo atendente
+          </button>
+        </div>
+      </div>
+
+      <table class="t">
+        <thead>
+          <tr>
+            <th class="code">Mat.</th>
+            <th>Nome</th>
+            <th>E-mail</th>
+            <th>Perfil</th>
+            <th style="text-align:right;">Tickets ativos</th>
+            <th>Último acesso</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="code tnum">A-001</td>
+            <td>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span class="avatar sm">GP</span>
+                <div>
+                  <div style="font-weight:500;">Gilberg Pinheiro</div>
+                  <div class="foot" style="font-size:11px;">Founder · suporte WinThor</div>
+                </div>
+              </div>
+            </td>
+            <td>gilberg@thorconsultoria.com.br</td>
+            <td>
+              <span class="perfil admin"><span class="dot"></span><span>Administrador</span></span>
+            </td>
+            <td class="right tnum">12</td>
+            <td class="tnum">há 4 min</td>
+            <td class="right">
+              <div class="row-actions">
+                <button class="ico" title="Editar"><svg class="i sm" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
+                <button class="ico danger" title="Excluir"><svg class="i sm" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td class="code tnum">A-002</td>
+            <td>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span class="avatar sm" style="background:linear-gradient(140deg,#9A6B1F,#C97B2A)">MC</span>
+                <div>
+                  <div style="font-weight:500;">Mariana Castro</div>
+                  <div class="foot" style="font-size:11px;">Líder técnica fiscal</div>
+                </div>
+              </div>
+            </td>
+            <td>mariana.castro@thorconsultoria.com.br</td>
+            <td>
+              <span class="perfil supervisor"><span class="dot"></span><span>Supervisor</span></span>
+            </td>
+            <td class="right tnum">09</td>
+            <td class="tnum">há 12 min</td>
+            <td class="right">
+              <div class="row-actions">
+                <button class="ico" title="Editar"><svg class="i sm" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
+                <button class="ico danger" title="Excluir"><svg class="i sm" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td class="code tnum">A-003</td>
+            <td>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span class="avatar sm" style="background:linear-gradient(140deg,#3B5A6B,#8AB0C2)">BT</span>
+                <div>
+                  <div style="font-weight:500;">Bruno Tavares</div>
+                  <div class="foot" style="font-size:11px;">Especialista financeiro</div>
+                </div>
+              </div>
+            </td>
+            <td>bruno.tavares@thorconsultoria.com.br</td>
+            <td>
+              <span class="perfil supervisor"><span class="dot"></span><span>Supervisor</span></span>
+            </td>
+            <td class="right tnum">07</td>
+            <td class="tnum">há 32 min</td>
+            <td class="right">
+              <div class="row-actions">
+                <button class="ico" title="Editar"><svg class="i sm" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
+                <button class="ico danger" title="Excluir"><svg class="i sm" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td class="code tnum">A-004</td>
+            <td>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span class="avatar sm" style="background:linear-gradient(140deg,#4F6B3B,#93AE73)">LF</span>
+                <div>
+                  <div style="font-weight:500;">Larissa Fontes</div>
+                  <div class="foot" style="font-size:11px;">Atendimento estoque/compras</div>
+                </div>
+              </div>
+            </td>
+            <td>larissa.fontes@thorconsultoria.com.br</td>
+            <td>
+              <span class="perfil atendente"><span class="dot"></span><span>Atendente</span></span>
+            </td>
+            <td class="right tnum">05</td>
+            <td class="tnum">há 1 h</td>
+            <td class="right">
+              <div class="row-actions">
+                <button class="ico" title="Editar"><svg class="i sm" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
+                <button class="ico danger" title="Excluir"><svg class="i sm" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td class="code tnum">A-005</td>
+            <td>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span class="avatar sm" style="background:linear-gradient(140deg,#8C2B22,#B5532B)">RT</span>
+                <div>
+                  <div style="font-weight:500;">Renan Teixeira</div>
+                  <div class="foot" style="font-size:11px;">Atendimento vendas/pedidos</div>
+                </div>
+              </div>
+            </td>
+            <td>renan.teixeira@thorconsultoria.com.br</td>
+            <td>
+              <span class="perfil atendente"><span class="dot"></span><span>Atendente</span></span>
+            </td>
+            <td class="right tnum">06</td>
+            <td class="tnum">há 1 h</td>
+            <td class="right">
+              <div class="row-actions">
+                <button class="ico" title="Editar"><svg class="i sm" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
+                <button class="ico danger" title="Excluir"><svg class="i sm" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td class="code tnum">A-006</td>
+            <td>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span class="avatar sm" style="background:linear-gradient(140deg,#3B5A6B,#6F8B9C)">PV</span>
+                <div>
+                  <div style="font-weight:500;">Patrícia Veiga</div>
+                  <div class="foot" style="font-size:11px;">Atendimento fiscal pleno</div>
+                </div>
+              </div>
+            </td>
+            <td>patricia.veiga@thorconsultoria.com.br</td>
+            <td>
+              <span class="perfil atendente"><span class="dot"></span><span>Atendente</span></span>
+            </td>
+            <td class="right tnum">04</td>
+            <td class="tnum">há 2 h</td>
+            <td class="right">
+              <div class="row-actions">
+                <button class="ico" title="Editar"><svg class="i sm" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
+                <button class="ico danger" title="Excluir"><svg class="i sm" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+                </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td class="code tnum">A-007</td>
+            <td>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span class="avatar sm" style="background:linear-gradient(140deg,#9A6B1F,#E0993F)">DM</span>
+                <div>
+                  <div style="font-weight:500;">Diego Matos</div>
+                  <div class="foot" style="font-size:11px;">Atendimento júnior</div>
+                </div>
+              </div>
+            </td>
+            <td>diego.matos@thorconsultoria.com.br</td>
+            <td>
+              <span class="perfil atendente"><span class="dot"></span><span>Atendente</span></span>
+            </td>
+            <td class="right tnum">03</td>
+            <td class="tnum">há 3 h</td>
+            <td class="right">
+              <div class="row-actions">
+                <button class="ico" title="Editar"><svg class="i sm" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
+                <button class="ico danger" title="Excluir"><svg class="i sm" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td class="code tnum">A-008</td>
+            <td>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span class="avatar sm" style="background:linear-gradient(140deg,#4F6B3B,#7A8E5C)">VC</span>
+                <div>
+                  <div style="font-weight:500;">Vanessa Coutinho</div>
+                  <div class="foot" style="font-size:11px;">Atendimento estoque</div>
+                </div>
+              </div>
+            </td>
+            <td>vanessa.coutinho@thorconsultoria.com.br</td>
+            <td>
+              <span class="perfil atendente"><span class="dot"></span><span>Atendente</span></span>
+            </td>
+            <td class="right tnum">02</td>
+            <td class="tnum">ontem</td>
+            <td class="right">
+              <div class="row-actions">
+                <button class="ico" title="Editar"><svg class="i sm" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
+                <button class="ico danger" title="Excluir"><svg class="i sm" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="table-foot">
+        <span class="foot">Exibindo 1 — 8 de 12</span>
+        <div class="pager">
+          <span class="p">‹</span>
+          <span class="p on">1</span>
+          <span class="p">2</span>
+          <span class="p">›</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot-page">
+      <span class="left">194 / 247</span>
+      <span class="right">v. Cadastros · atendentes</span>
+    </div>
+  </section>
+
+  <div class="divider-asterisk">* &nbsp; * &nbsp; *</div>
+
+  <footer style="text-align:center; padding:32px 0 0; color:var(--ink-mute);">
+    <div class="serif" style="font-size:18px; font-style:italic;">— fim do mockup —</div>
+    <div class="smallcaps" style="margin-top:6px;">Thor·Desk · redesign v0.1 · maio 2026</div>
+  </footer>
+</div>
+
+<script>
+(function(){
+  const root = document.documentElement;
+  const btn  = document.getElementById('themeToggle');
+  const sun  = document.getElementById('iconSun');
+  const moon = document.getElementById('iconMoon');
+  function apply(theme){
+    root.setAttribute('data-theme', theme);
+    if(theme === 'dark'){ sun.style.display='none'; moon.style.display=''; }
+    else                { sun.style.display='';     moon.style.display='none'; }
+    try{ localStorage.setItem('thordesk-theme', theme); }catch(e){}
+  }
+  let saved = 'light';
+  try{ saved = localStorage.getItem('thordesk-theme') || 'light'; }catch(e){}
+  apply(saved);
+  btn.addEventListener('click', () => {
+    apply(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  });
+})();
+</script>
+</body>
+</html>
