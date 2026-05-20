@@ -42,8 +42,30 @@ export type TicketMessage = {
   created_at: string;
 };
 
+export type PendingTicketMessage = {
+  id: number;
+  content: string;
+  media_type: string | null;
+  media_url: string | null;
+  media_mime_type: string | null;
+  media_storage_key: string | null;
+  local_media_url: string | null;
+  reason: string | null;
+  created_at: string;
+  sender:
+    | {
+        id: number;
+        phone: string;
+        name: string | null;
+        employee_id: number | null;
+        employee_role: { id: number; name: string } | null;
+      }
+    | null;
+};
+
 export type TicketDetail = Ticket & {
   messages: TicketMessage[];
+  pending_messages: PendingTicketMessage[];
 };
 
 export type KanbanColumn = {

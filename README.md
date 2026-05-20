@@ -19,8 +19,10 @@ https://SEU_DOMINIO/api/v1/webhooks/zapi
 ```
 
 3. Quando uma mensagem do grupo começar com `#chamado`, o backend cria um ticket com protocolo automático.
-4. Mensagens posteriores do mesmo grupo entram no ticket aberto mais recente enquanto ele estiver em status operacional.
-5. O atendente pode assumir, mudar status e responder ao grupo pelo painel.
+4. O sistema responde automaticamente no grupo com o protocolo criado e a orientação de uso do comando `#ticket PROTOCOLO`.
+5. Mensagens com `#ticket PROTOCOLO` entram diretamente no ticket referenciado.
+6. Mensagens sem gatilho ficam pendentes no painel para o atendente vincular ao ticket atual, criar um novo ticket ou ignorar.
+7. O atendente pode assumir, mudar status e responder ao grupo pelo painel.
 
 ## Subir localmente
 

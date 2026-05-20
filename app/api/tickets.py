@@ -9,6 +9,7 @@ from app.models.support import Agent
 from app.models.ticket import Ticket
 from app.schemas.ticket import (
     AssignTicketRequest,
+    CreateTicketFromPendingRequest,
     KanbanColumn,
     ReplyTicketRequest,
     TicketDetail,
@@ -28,7 +29,61 @@ def kanban(
     agent: Annotated[Agent, Depends(get_current_agent)],
 ) -> list[KanbanColumn]:
     columns = TicketService(db).kanban(viewer=agent)
-    return [KanbanColumn(status=status_key, tickets=tickets) for status_key, tickets in columns.items()]
+    return [
+        KanbanColumn(status=status_key, tickets=tickets)
+        for status_key, tickets in columns.items()
+    ]
+
+
+@router.post("/pending/{pending_id}/link/{ticket_id}", response_model=TicketMessageRead)
+def link_pending_message(
+    pending_id: int,
+    ticket_id: int,
+    db: Annotated[Session, Depends(get_db)],
+    agent: Annotated[Agent, Depends(get_current_agent)],
+) -> TicketMessageRead:
+    message = TicketService(db).link_pending_message(pending_id, ticket_id, agent)
+    if message is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Mensagem ou ticket não encontrado",
+        )
+    return message
+
+
+@router.post("/pending/{pending_id}/create-ticket", response_model=TicketRead)
+def create_ticket_from_pending(
+    pending_id: int,
+    payload: CreateTicketFromPendingRequest,
+    db: Annotated[Session, Depends(get_db)],
+    agent: Annotated[Agent, Depends(get_current_agent)],
+) -> TicketRead:
+    ticket = TicketService(db).create_ticket_from_pending(
+        pending_id,
+        agent,
+        title=payload.title,
+        description=payload.description,
+    )
+    if ticket is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Mensagem pendente não encontrada",
+        )
+    return ticket
+
+
+@router.post("/pending/{pending_id}/ignore", status_code=status.HTTP_204_NO_CONTENT)
+def ignore_pending_message(
+    pending_id: int,
+    db: Annotated[Session, Depends(get_db)],
+    agent: Annotated[Agent, Depends(get_current_agent)],
+) -> None:
+    ignored = TicketService(db).ignore_pending_message(pending_id, agent)
+    if not ignored:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Mensagem pendente não encontrada",
+        )
 
 
 @router.get("/{ticket_id}", response_model=TicketDetail)
@@ -52,7 +107,10 @@ def assign(
 ) -> TicketRead:
     ticket = TicketService(db).assign(ticket_id, agent, payload.agent_id)
     if ticket is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket or agent not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ticket or agent not found",
+        )
     return ticket
 
 

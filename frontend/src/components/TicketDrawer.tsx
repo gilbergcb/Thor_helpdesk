@@ -1,11 +1,14 @@
-import { LogIn, Send, Trash2 } from "lucide-react";
+import { Link2, LogIn, Plus, Send, Trash2, X } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 
 import {
   assignTicket,
   changeStatus,
+  createTicketFromPending,
   deleteTicket,
   getTicket,
+  ignorePendingMessage,
+  linkPendingMessage,
   replyTicket
 } from "../services/api";
 import type { AgentMe, Ticket, TicketDetail, TicketStatus } from "../types/api";
@@ -111,6 +114,42 @@ export function TicketDrawer({ ticket, onChanged, viewer }: Props) {
     try {
       await deleteTicket(ticket.id);
       onChanged();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleLinkPending(pendingId: number) {
+    if (!ticket) return;
+    setBusy(true);
+    try {
+      await linkPendingMessage(pendingId, ticket.id);
+      onChanged();
+      setDetail(await getTicket(ticket.id));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleCreateFromPending(pendingId: number) {
+    if (!ticket) return;
+    setBusy(true);
+    try {
+      await createTicketFromPending(pendingId);
+      onChanged();
+      setDetail(await getTicket(ticket.id));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleIgnorePending(pendingId: number) {
+    if (!ticket) return;
+    setBusy(true);
+    try {
+      await ignorePendingMessage(pendingId);
+      onChanged();
+      setDetail(await getTicket(ticket.id));
     } finally {
       setBusy(false);
     }
@@ -475,6 +514,61 @@ export function TicketDrawer({ ticket, onChanged, viewer }: Props) {
           </div>
         ) : null}
       </div>
+
+      {(detail?.pending_messages ?? []).length > 0 ? (
+        <section className="thor-pending-thread">
+          <div className="thor-pending-head">
+            <div>
+              <span className="smallcaps">Mensagens pendentes do grupo</span>
+              <strong>{detail?.pending_messages.length ?? 0}</strong>
+            </div>
+            <p className="foot-italic">
+              Vincule ao ticket atual, crie um novo chamado ou ignore.
+            </p>
+          </div>
+          <div className="thor-pending-list">
+            {(detail?.pending_messages ?? []).map((pending) => (
+              <article className="thor-pending-card" key={pending.id}>
+                <div className="thor-pending-meta">
+                  <span>{pending.sender?.name ?? pending.sender?.phone ?? "Cliente"}</span>
+                  <time>{new Date(pending.created_at).toLocaleString("pt-BR")}</time>
+                </div>
+                <p>{pending.content}</p>
+                {pending.reason ? <small>{pending.reason}</small> : null}
+                <div className="thor-pending-actions">
+                  <button
+                    className="thor-btn sm"
+                    disabled={busy}
+                    onClick={() => handleLinkPending(pending.id)}
+                    title="Vincular ao ticket selecionado"
+                    type="button"
+                  >
+                    <Link2 size={14} /> Vincular aqui
+                  </button>
+                  <button
+                    className="thor-btn ghost sm"
+                    disabled={busy}
+                    onClick={() => handleCreateFromPending(pending.id)}
+                    title="Criar novo ticket a partir desta mensagem"
+                    type="button"
+                  >
+                    <Plus size={14} /> Novo ticket
+                  </button>
+                  <button
+                    className="thor-btn danger-ghost sm"
+                    disabled={busy}
+                    onClick={() => handleIgnorePending(pending.id)}
+                    title="Ignorar mensagem pendente"
+                    type="button"
+                  >
+                    <X size={14} /> Ignorar
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {/* Composer */}
       <form

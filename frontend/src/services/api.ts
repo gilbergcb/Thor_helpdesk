@@ -100,6 +100,31 @@ export function replyTicket(ticketId: number, message: string) {
   });
 }
 
+export function linkPendingMessage(pendingId: number, ticketId: number) {
+  return request<TicketMessage>(`/tickets/pending/${pendingId}/link/${ticketId}`, {
+    method: "POST"
+  });
+}
+
+export function createTicketFromPending(
+  pendingId: number,
+  payload: { title?: string | null; description?: string | null } = {}
+) {
+  return request<Ticket>(`/tickets/pending/${pendingId}/create-ticket`, {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
+export function ignorePendingMessage(pendingId: number) {
+  return fetch(`${API_URL}/tickets/pending/${pendingId}/ignore`, {
+    method: "POST",
+    headers: headers()
+  }).then(async (r) => {
+    if (!r.ok) throw new Error((await r.text()) || "Falha ao ignorar mensagem");
+  });
+}
+
 export function getClients() {
   return request<Client[]>("/admin/clients");
 }

@@ -65,6 +65,27 @@ class TicketMessageRead(BaseModel):
         return f"/api/v1/media/{self.id}"
 
 
+class PendingTicketMessageRead(BaseModel):
+    id: int
+    content: str
+    media_type: str | None = None
+    media_url: str | None = None
+    media_mime_type: str | None = None
+    media_storage_key: str | None = None
+    reason: str | None = None
+    created_at: datetime
+    sender: RequesterRead | None = None
+
+    model_config = {"from_attributes": True}
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def local_media_url(self) -> str | None:
+        if not self.media_storage_key:
+            return None
+        return f"/api/v1/media/pending/{self.id}"
+
+
 class TicketRead(BaseModel):
     id: int
     protocol: str
@@ -83,6 +104,7 @@ class TicketRead(BaseModel):
 
 class TicketDetail(TicketRead):
     messages: list[TicketMessageRead] = []
+    pending_messages: list[PendingTicketMessageRead] = []
 
 
 class AssignTicketRequest(BaseModel):
@@ -102,6 +124,11 @@ class TicketUpdateRequest(BaseModel):
     description: str | None = None
     priority: TicketPriority | None = None
     category_id: int | None = None
+
+
+class CreateTicketFromPendingRequest(BaseModel):
+    title: str | None = None
+    description: str | None = None
 
 
 class KanbanColumn(BaseModel):

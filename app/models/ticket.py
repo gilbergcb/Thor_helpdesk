@@ -73,6 +73,35 @@ class TicketMessage(TimestampMixin, Base):
     agent = relationship("Agent", back_populates="sent_messages")
 
 
+class PendingTicketMessage(TimestampMixin, Base):
+    __tablename__ = "pending_ticket_messages"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    whatsapp_group_id: Mapped[int] = mapped_column(ForeignKey("whatsapp_groups.id"), nullable=False)
+    sender_id: Mapped[int | None] = mapped_column(ForeignKey("whatsapp_users.id"))
+    linked_ticket_id: Mapped[int | None] = mapped_column(ForeignKey("tickets.id"))
+    status: Mapped[str] = mapped_column(String(24), default="pending", index=True, nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    media_type: Mapped[str | None] = mapped_column(String(32))
+    media_url: Mapped[str | None] = mapped_column(Text)
+    media_mime_type: Mapped[str | None] = mapped_column(String(128))
+    media_storage_key: Mapped[str | None] = mapped_column(String(255))
+    external_message_id: Mapped[str | None] = mapped_column(String(128), index=True)
+    reason: Mapped[str | None] = mapped_column(String(180))
+
+    whatsapp_group = relationship("WhatsAppGroup")
+    sender = relationship("WhatsAppUser")
+    linked_ticket = relationship("Ticket")
+
+
+Index(
+    "ix_pending_ticket_messages_group_status_created",
+    PendingTicketMessage.whatsapp_group_id,
+    PendingTicketMessage.status,
+    PendingTicketMessage.created_at,
+)
+
+
 class TicketHistory(TimestampMixin, Base):
     __tablename__ = "ticket_history"
 

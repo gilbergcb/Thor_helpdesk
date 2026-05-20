@@ -11,8 +11,8 @@ router = APIRouter(prefix="/webhooks", tags=["webhooks"])
 
 
 @router.post("/zapi", response_model=WebhookResult)
-def zapi_webhook(
+async def zapi_webhook(
     payload: ZApiWebhookPayload,
     db: Annotated[Session, Depends(get_db)],
 ) -> WebhookResult:
-    return WebhookService(db).process_message(payload)
+    return await WebhookService(db).process_message(payload)
