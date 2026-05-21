@@ -80,6 +80,17 @@ export function getTicket(ticketId: number) {
   return request<TicketDetail>(`/tickets/${ticketId}`);
 }
 
+export async function fetchTicketAttachmentBlobUrl(attachmentId: number): Promise<string> {
+  const response = await fetch(`${API_URL}/tickets/attachments/${attachmentId}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {}
+  });
+  if (!response.ok) {
+    throw new Error((await response.text()) || `Anexo indisponivel (HTTP ${response.status})`);
+  }
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
+}
+
 export function assignTicket(ticketId: number) {
   return request(`/tickets/${ticketId}/assign`, {
     method: "POST",

@@ -30,6 +30,15 @@ export type Ticket = {
   assigned_agent: { id: number; name: string; email: string; phone: string | null } | null;
 };
 
+export type TicketAttachment = {
+  id: number;
+  mime_type: string;
+  byte_size: number;
+  original_filename: string | null;
+  source: string;
+  url: string;
+};
+
 export type TicketMessage = {
   id: number;
   direction: "inbound" | "outbound";
@@ -39,6 +48,7 @@ export type TicketMessage = {
   media_mime_type: string | null;
   media_storage_key: string | null;
   local_media_url: string | null;
+  attachments: TicketAttachment[];
   created_at: string;
 };
 

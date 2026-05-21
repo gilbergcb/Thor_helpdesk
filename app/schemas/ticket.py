@@ -46,6 +46,25 @@ class RequesterRead(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class TicketAttachmentRead(BaseModel):
+    """Anexo individual de uma TicketMessage. Resolução do binário é
+    autenticada (Bearer JWT) e validada por tenant em
+    `GET /api/v1/tickets/attachments/{id}`."""
+
+    id: int
+    mime_type: str
+    byte_size: int
+    original_filename: str | None = None
+    source: str
+
+    model_config = {"from_attributes": True}
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def url(self) -> str:
+        return f"/api/v1/tickets/attachments/{self.id}"
+
+
 class TicketMessageRead(BaseModel):
     id: int
     direction: MessageDirection
@@ -54,6 +73,7 @@ class TicketMessageRead(BaseModel):
     media_url: str | None = None
     media_mime_type: str | None = None
     media_storage_key: str | None = None
+    attachments: list[TicketAttachmentRead] = []
     created_at: datetime
 
     model_config = {"from_attributes": True}
