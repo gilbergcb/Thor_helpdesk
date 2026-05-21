@@ -1,11 +1,12 @@
+import logging
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
-from app.api.deps import get_current_agent, require_admin
+from app.api.deps import require_admin, require_supervisor_or_admin
 from app.core.database import get_db
 from app.core.security import (
     decrypt_secret,
@@ -18,6 +19,9 @@ from app.models.enums import AgentRole
 from app.models.client import Client, ClientAccessCredential, ClientEmployee, EmployeeRole
 from app.models.support import Agent
 from app.models.whatsapp import WhatsAppGroup
+
+# F-10: audit log dedicado para acessos ao vault de credenciais de cliente.
+_vault_audit = logging.getLogger("security.vault")
 from app.schemas.admin import (
     AgentCreate,
     AgentRead,
@@ -357,7 +361,7 @@ def delete_client_employee(
 @router.get("/client-access-credentials", response_model=list[ClientAccessCredentialRead])
 def list_client_access_credentials(
     db: Annotated[Session, Depends(get_db)],
-    _: Annotated[Agent, Depends(get_current_agent)],
+    _: Annotated[Agent, Depends(require_supervisor_or_admin)],
 ) -> list[ClientAccessCredential]:
     return list(
         db.scalars(
@@ -406,16 +410,30 @@ def create_client_access_credential(
     response_model=ClientAccessCredentialReveal,
 )
 def reveal_client_access_credential(
+    request: Request,
     credential_id: int,
     payload: ClientAccessCredentialRevealRequest,
     db: Annotated[Session, Depends(get_db)],
-    _: Annotated[Agent, Depends(get_current_agent)],
+    actor: Annotated[Agent, Depends(require_supervisor_or_admin)],
 ) -> ClientAccessCredentialReveal:
     credential = _get_or_404(db, ClientAccessCredential, credential_id)
     if not credential.is_active:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Acesso inativo")
     if not verify_password(payload.reveal_token, credential.reveal_token_hash):
+        _vault_audit.warning(
+            "vault.reveal.denied actor_id=%s actor_email=%s credential_id=%s "
+            "client_id=%s ip=%s reason=bad_reveal_token",
+            actor.id, actor.email, credential.id, credential.client_id,
+            request.client.host if request.client else None,
+        )
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Token de visualização inválido")
+    _vault_audit.info(
+        "vault.reveal.ok actor_id=%s actor_email=%s actor_role=%s "
+        "credential_id=%s client_id=%s ip=%s",
+        actor.id, actor.email, actor.role.value,
+        credential.id, credential.client_id,
+        request.client.host if request.client else None,
+    )
     return ClientAccessCredentialReveal(
         id=credential.id,
         title=credential.title,
