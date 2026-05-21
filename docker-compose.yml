@@ -44,8 +44,9 @@ services:
     container_name: thor_helpdesk_frontend
     depends_on:
       - backend
+    # F-14: nginx-unprivileged escuta em 8080 (não-root).
     ports:
-      - "${FRONTEND_PORT:-8080}:80"
+      - "${FRONTEND_PORT:-8080}:8080"
 
 volumes:
   postgres_data:
