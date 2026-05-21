@@ -60,7 +60,7 @@ acionar rollback imediato (ver `RUNBOOK.md` na mesma pasta).
 - [ ] **7.3** Revelar senha → valor original retorna intacto.
 
 ### 8. Health
-- [ ] **8.1** `GET /api/v1/health` → `200 {"status":"ok"}`.
+- [ ] **8.1** `GET /health` → `200 {"status":"ok"}` (rota raiz, não sob /api/v1).
 - [ ] **8.2** `docker compose ps` no VPS → todos serviços `Up (healthy)`.
 
 ---
