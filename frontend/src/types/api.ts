@@ -42,6 +42,15 @@ export type TicketMessage = {
   created_at: string;
 };
 
+export type PublicTicketAttachment = {
+  id: number;
+  mime_type: string;
+  byte_size: number;
+  original_filename: string | null;
+  source: string;
+  url: string;
+};
+
 export type PublicTicketMessage = {
   id: number;
   direction: "inbound" | "outbound";
@@ -49,6 +58,7 @@ export type PublicTicketMessage = {
   media_type: string | null;
   media_storage_key: string | null;
   local_media_url: string | null;
+  attachments: PublicTicketAttachment[];
   created_at: string;
 };
 

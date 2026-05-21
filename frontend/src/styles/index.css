@@ -886,8 +886,8 @@ select {
 
 .thor-public-composer {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
+  grid-template-columns: 1fr;
+  gap: 10px;
   padding: 16px clamp(18px, 3vw, 30px) 20px;
   border-top: 1px solid var(--hairline);
   background: color-mix(in srgb, var(--bg) 45%, var(--bg-elev));
@@ -909,6 +909,177 @@ select {
   border-color: var(--accent);
 }
 
+.thor-public-composer-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.thor-public-composer-toolbar small {
+  color: color-mix(in srgb, var(--ink) 55%, transparent);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+
+.thor-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--hairline);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  padding: 8px 12px;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.thor-btn-ghost:hover:not(:disabled) {
+  background: var(--bg-elev);
+  border-color: var(--accent);
+}
+
+.thor-btn-ghost:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.thor-public-composer-pending {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.thor-public-composer-pending li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 32px 8px 8px;
+  border: 1px solid var(--hairline);
+  background: var(--bg-elev);
+  min-height: 56px;
+}
+
+.thor-public-composer-pending li.is-image img {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border: 1px solid var(--hairline);
+}
+
+.thor-public-composer-pending li > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.thor-public-composer-pending li strong {
+  font-size: 12px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.thor-public-composer-pending li small {
+  font-size: 11px;
+  color: color-mix(in srgb, var(--ink) 55%, transparent);
+}
+
+.thor-public-composer-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  color: color-mix(in srgb, var(--ink) 60%, transparent);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thor-public-composer-remove:hover:not(:disabled) {
+  color: var(--danger, #c0392b);
+}
+
+.thor-public-attachments {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.thor-public-attachment {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  border: 1px solid var(--hairline);
+  background: var(--bg-elev);
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 12px;
+  min-height: 56px;
+}
+
+.thor-public-attachment:hover {
+  border-color: var(--accent);
+}
+
+.thor-public-attachment.is-image {
+  position: relative;
+  padding: 0;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  min-height: auto;
+}
+
+.thor-public-attachment.is-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thor-public-attachment.is-image span {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  background: color-mix(in srgb, #000 70%, transparent);
+  color: #fff;
+  padding: 2px 6px;
+  font-size: 10px;
+  border-radius: 2px;
+}
+
+.thor-public-attachment.is-file div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.thor-public-attachment.is-file strong {
+  font-size: 12px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.thor-public-attachment.is-file small {
+  font-size: 11px;
+  color: color-mix(in srgb, var(--ink) 55%, transparent);
+}
+
 @media (max-width: 820px) {
   .thor-public-summary {
     grid-template-columns: 1fr;
@@ -918,12 +1089,13 @@ select {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .thor-public-composer {
-    grid-template-columns: 1fr;
-  }
-
   .thor-public-composer .thor-btn {
     justify-content: center;
+  }
+
+  .thor-public-composer-toolbar {
+    flex-direction: column;
+    align-items: stretch;
   }
 }
 
