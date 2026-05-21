@@ -53,6 +53,9 @@ class Settings(BaseSettings):
     public_upload_max_bytes: int = 15 * 1024 * 1024  # 15 MB por arquivo
     public_upload_max_files_per_request: int = 3
     public_upload_quota_bytes_per_hour: int = 50 * 1024 * 1024  # 50 MB / token / hora
+    waiting_customer_auto_close_enabled: bool = True
+    waiting_customer_auto_close_hours: int = 24
+    waiting_customer_auto_close_interval_seconds: int = 600
     # Hosts permitidos no download de mídia (Z-API + CDNs WhatsApp).
     # Separados por vírgula. Sufixos casam por endswith.
     ssrf_allowed_hosts: str = (
