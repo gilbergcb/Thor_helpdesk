@@ -27,7 +27,6 @@ from app.models.ticket import (
     TicketHistory,
     TicketMessage,
     TicketMessageAttachment,
-    TicketPublicLink,
 )
 from app.schemas.public import (
     PublicTicketAttachmentRead,
