@@ -738,6 +738,210 @@ select {
   pointer-events: auto;
 }
 
+/* ---------- Public ticket portal ---------- */
+.thor-public-page {
+  min-height: 100vh;
+  background: var(--bg);
+  padding: clamp(18px, 4vw, 42px);
+}
+
+.thor-public-shell {
+  width: min(980px, 100%);
+  margin: 0 auto;
+  border: 1px solid var(--hairline);
+  background: var(--bg-elev);
+  box-shadow: var(--shadow-md);
+}
+
+.thor-public-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px clamp(18px, 3vw, 30px);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.thor-public-header img {
+  width: clamp(128px, 18vw, 180px);
+  height: auto;
+}
+
+.thor-public-header span {
+  color: var(--ink-mute);
+  font-family: "Newsreader", serif;
+  font-size: 15px;
+  font-style: italic;
+}
+
+.thor-public-error {
+  margin: 22px clamp(18px, 3vw, 30px);
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, var(--hairline));
+  color: var(--danger);
+}
+
+.thor-public-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px 24px;
+  padding: clamp(20px, 3vw, 30px);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.thor-public-summary h1 {
+  margin: 4px 0 0;
+  color: var(--ink);
+  font-family: "Newsreader", serif;
+  font-size: clamp(34px, 7vw, 62px);
+  font-weight: 500;
+  line-height: 0.95;
+}
+
+.thor-public-summary > p {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--ink);
+  font-family: "Newsreader", serif;
+  font-size: clamp(22px, 3vw, 30px);
+  line-height: 1.15;
+}
+
+.thor-public-summary dl {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin: 8px 0 0;
+}
+
+.thor-public-summary dt {
+  color: var(--ink-mute);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.thor-public-summary dd {
+  margin: 6px 0 0;
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.thor-public-summary dd small {
+  display: block;
+  margin-top: 4px;
+  color: var(--ink-mute);
+  font-family: "Newsreader", serif;
+  font-style: italic;
+}
+
+.thor-public-thread {
+  display: grid;
+  gap: 14px;
+  max-height: min(58vh, 620px);
+  overflow: auto;
+  padding: clamp(18px, 3vw, 30px);
+}
+
+.thor-public-thread article {
+  width: min(720px, 92%);
+  border: 1px solid var(--hairline);
+  background: var(--bubble-client);
+  padding: 12px 14px;
+}
+
+.thor-public-thread article.is-agent {
+  justify-self: end;
+  background: var(--bubble-agent);
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--hairline));
+}
+
+.thor-public-thread article > span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--ink-mute);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.thor-public-thread p {
+  margin: 0;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.thor-public-thread time {
+  display: block;
+  margin-top: 8px;
+  color: var(--ink-mute);
+  font-family: "Newsreader", serif;
+  font-size: 12px;
+  font-style: italic;
+}
+
+.thor-public-composer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  padding: 16px clamp(18px, 3vw, 30px) 20px;
+  border-top: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--bg) 45%, var(--bg-elev));
+}
+
+.thor-public-composer textarea {
+  min-height: 84px;
+  resize: vertical;
+  border: 1px solid var(--hairline);
+  background: var(--bg-elev);
+  color: var(--ink);
+  font-family: "Geist", sans-serif;
+  font-size: 14px;
+  outline: none;
+  padding: 11px 12px;
+}
+
+.thor-public-composer textarea:focus {
+  border-color: var(--accent);
+}
+
+@media (max-width: 820px) {
+  .thor-public-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .thor-public-summary dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .thor-public-composer {
+    grid-template-columns: 1fr;
+  }
+
+  .thor-public-composer .thor-btn {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 560px) {
+  .thor-public-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .thor-public-summary dl {
+    grid-template-columns: 1fr;
+  }
+
+  .thor-public-thread article {
+    width: 100%;
+  }
+}
+
 /* ---------- Admin registrations ---------- */
 .thor-admin-page {
   padding-inline: clamp(16px, 2vw, 32px);

@@ -5,6 +5,7 @@ import { KanbanBoard } from "../components/KanbanBoard";
 import { AdminPanel } from "../components/AdminPanel";
 import { AccessVaultPanel } from "../components/AccessVaultPanel";
 import { TicketDrawer } from "../components/TicketDrawer";
+import { PublicTicketPage } from "./PublicTicketPage";
 import { useTheme } from "../hooks/useTheme";
 import {
   changeOwnPassword,
@@ -197,7 +198,7 @@ function Login({ onLogged }: { onLogged: () => void }) {
   );
 }
 
-export default function App() {
+function PrivateApp() {
   const [authenticated, setAuthenticated] = useState(hasToken());
   const [me, setMe] = useState<AgentMe | null>(null);
   const [view, setView] = useState<"kanban" | "accesses" | "admin">("kanban");
@@ -722,4 +723,13 @@ function PasswordChangeModal({
       </form>
     </div>
   );
+}
+
+export default function App() {
+  const publicTicketMatch = window.location.pathname.match(/^\/t\/([^/]+)$/);
+  if (publicTicketMatch) {
+    return <PublicTicketPage token={decodeURIComponent(publicTicketMatch[1])} />;
+  }
+
+  return <PrivateApp />;
 }

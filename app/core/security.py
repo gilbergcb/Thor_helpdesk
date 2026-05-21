@@ -24,6 +24,14 @@ def generate_reveal_token() -> str:
     return secrets.token_urlsafe(24)
 
 
+def generate_public_ticket_token() -> str:
+    return secrets.token_urlsafe(32)
+
+
+def hash_public_token(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
 def _vault() -> Fernet:
     settings = get_settings()
     secret = settings.vault_secret_key or settings.jwt_secret_key

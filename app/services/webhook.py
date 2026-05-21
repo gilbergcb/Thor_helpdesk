@@ -10,6 +10,7 @@ from app.repositories.tickets import TicketRepository
 from app.repositories.whatsapp import WhatsAppRepository
 from app.schemas.webhook import WebhookResult, ZApiWebhookPayload
 from app.services.media_storage import download_to_storage
+from app.services.public_links import PublicTicketLinkService
 from app.services.zapi import ZApiClient
 
 TRIGGER = "#chamado"
@@ -75,6 +76,7 @@ class WebhookService:
                     description=f"Ticket criado automaticamente pelo gatilho {TRIGGER}",
                 )
             )
+            public_token = PublicTicketLinkService(self.db).create_for_ticket(ticket)
         elif referenced_protocol:
             ticket = self.tickets.get_by_protocol(referenced_protocol)
             if ticket is None or ticket.whatsapp_group_id != group.id:
@@ -129,7 +131,12 @@ class WebhookService:
         self.db.commit()
         self.db.refresh(ticket)
         if is_new_ticket:
-            await self._send_open_confirmation(ticket, user.name or user.phone, description)
+            await self._send_open_confirmation(
+                ticket,
+                user.name or user.phone,
+                description,
+                public_token,
+            )
         return WebhookResult(ticket_id=ticket.id, protocol=ticket.protocol)
 
     @staticmethod
@@ -165,14 +172,22 @@ class WebhookService:
             )
         )
 
-    async def _send_open_confirmation(self, ticket: Ticket, requester: str, summary: str) -> None:
+    async def _send_open_confirmation(
+        self,
+        ticket: Ticket,
+        requester: str,
+        summary: str,
+        public_token: str,
+    ) -> None:
+        public_url = PublicTicketLinkService(self.db).public_url(public_token)
         message = (
             "Chamado aberto com sucesso.\n\n"
             f"Protocolo: {ticket.protocol}\n"
             f"Solicitante: {requester}\n"
             f"Resumo: {summary[:600]}\n\n"
-            "Nossa equipe vai acompanhar por aqui.\n"
-            f"Para complementar este atendimento, envie: #ticket {ticket.protocol} sua mensagem"
+            "Acompanhe e interaja com o atendimento pelo link:\n"
+            f"{public_url}\n\n"
+            "O link fica ativo ate a finalizacao do chamado."
         )
         try:
             result = await ZApiClient().send_group_message(ticket.whatsapp_group.group_id, message)

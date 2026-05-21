@@ -9,6 +9,7 @@ import type {
   ClientAccessCredentialReveal,
   EmployeeRole,
   KanbanColumn,
+  PublicTicket,
   Ticket,
   TicketDetail,
   TicketMessage,
@@ -122,6 +123,17 @@ export function ignorePendingMessage(pendingId: number) {
     headers: headers()
   }).then(async (r) => {
     if (!r.ok) throw new Error((await r.text()) || "Falha ao ignorar mensagem");
+  });
+}
+
+export function getPublicTicket(token: string) {
+  return request<PublicTicket>(`/public/tickets/${encodeURIComponent(token)}`);
+}
+
+export function sendPublicTicketMessage(token: string, message: string) {
+  return request<PublicTicket>(`/public/tickets/${encodeURIComponent(token)}/messages`, {
+    method: "POST",
+    body: JSON.stringify({ message })
   });
 }
 

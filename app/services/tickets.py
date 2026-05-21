@@ -10,6 +10,7 @@ from app.models.support import Agent
 from app.models.ticket import PendingTicketMessage, Ticket, TicketHistory, TicketMessage
 from app.repositories.agents import AgentRepository
 from app.repositories.tickets import TicketRepository
+from app.services.public_links import PublicTicketLinkService
 from app.services.zapi import ZApiClient
 
 logger = logging.getLogger(__name__)
@@ -81,6 +82,8 @@ class TicketService:
         ticket.status = status
         if status in (TicketStatus.resolvido, TicketStatus.fechado):
             ticket.closed_at = datetime.now(UTC)
+        if status == TicketStatus.fechado:
+            PublicTicketLinkService(self.db).revoke_for_ticket(ticket)
         self.db.add(
             TicketHistory(
                 ticket=ticket,
@@ -231,6 +234,7 @@ class TicketService:
         self.db.add(ticket)
         self.db.flush()
         self._copy_pending_to_ticket(pending, ticket)
+        PublicTicketLinkService(self.db).create_for_ticket(ticket)
         pending.status = "linked"
         pending.linked_ticket = ticket
         self.db.add(

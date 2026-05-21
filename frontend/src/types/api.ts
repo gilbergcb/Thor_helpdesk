@@ -42,6 +42,27 @@ export type TicketMessage = {
   created_at: string;
 };
 
+export type PublicTicketMessage = {
+  id: number;
+  direction: "inbound" | "outbound";
+  content: string;
+  media_type: string | null;
+  media_storage_key: string | null;
+  local_media_url: string | null;
+  created_at: string;
+};
+
+export type PublicTicket = {
+  protocol: string;
+  title: string;
+  status: TicketStatus;
+  client_name: string;
+  group_name: string;
+  requester_name: string | null;
+  assigned_agent: { name: string; phone: string | null } | null;
+  messages: PublicTicketMessage[];
+};
+
 export type PendingTicketMessage = {
   id: number;
   content: string;

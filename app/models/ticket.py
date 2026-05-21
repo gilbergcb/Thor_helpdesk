@@ -46,9 +46,28 @@ class Ticket(TimestampMixin, Base):
     history = relationship(
         "TicketHistory", back_populates="ticket", cascade="all, delete-orphan", passive_deletes=True
     )
+    public_links = relationship(
+        "TicketPublicLink",
+        back_populates="ticket",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
 
 Index("ix_tickets_group_status_created", Ticket.whatsapp_group_id, Ticket.status, Ticket.created_at)
+
+
+class TicketPublicLink(TimestampMixin, Base):
+    __tablename__ = "ticket_public_links"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    ticket_id: Mapped[int] = mapped_column(ForeignKey("tickets.id"), nullable=False)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_access_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    ticket = relationship("Ticket", back_populates="public_links")
 
 
 class TicketMessage(TimestampMixin, Base):

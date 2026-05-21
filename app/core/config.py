@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     zapi_client_token: str | None = None
 
     media_storage_dir: str = "/app/media"
+    public_app_url: AnyHttpUrl = "https://helpdesk.thorconsultoria.com.br"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
