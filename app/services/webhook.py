@@ -38,7 +38,10 @@ class WebhookService:
         media_url = payload.media_url
         media_type = payload.media_type
 
-        if payload.from_me:
+        is_new_ticket = content.lower().startswith(TRIGGER)
+        referenced_protocol = self._referenced_protocol(content)
+
+        if payload.from_me and not (is_new_ticket or referenced_protocol):
             return WebhookResult(ignored=True, reason="outgoing message")
         if not group_external_id or not sender_phone or not (content or media_url):
             return WebhookResult(ignored=True, reason="missing group, sender or content")
@@ -49,8 +52,6 @@ class WebhookService:
 
         user = self.whatsapp.upsert_user(group, sender_phone, payload.normalized_sender_name)
         self.db.flush()
-        is_new_ticket = content.lower().startswith(TRIGGER)
-        referenced_protocol = self._referenced_protocol(content)
         ticket = None
 
         if is_new_ticket:

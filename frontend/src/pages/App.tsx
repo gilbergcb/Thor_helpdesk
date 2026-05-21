@@ -411,7 +411,7 @@ export default function App() {
       ) : null}
 
       {view === "kanban" ? (
-        <div className={`thor-kanban-workspace ${ticketPanelOpen ? "detail-open" : ""}`}>
+        <div className={`thor-kanban-workspace ${ticketPanelOpen && selected ? "detail-open" : ""}`}>
           <section className="thor-kanban-panel">
             <KanbanBoard
               columns={columns}
@@ -427,14 +427,16 @@ export default function App() {
             className="thor-ticket-backdrop"
             onClick={() => setTicketPanelOpen(false)}
           />
-          <div className="thor-ticket-shell">
-            <TicketDrawer
-              onChanged={load}
-              onClose={() => setTicketPanelOpen(false)}
-              ticket={selected}
-              viewer={me}
-            />
-          </div>
+          {selected ? (
+            <div className="thor-ticket-shell">
+              <TicketDrawer
+                onChanged={load}
+                onClose={() => setTicketPanelOpen(false)}
+                ticket={selected}
+                viewer={me}
+              />
+            </div>
+          ) : null}
         </div>
       ) : view === "accesses" ? (
         <AccessVaultPanel />
