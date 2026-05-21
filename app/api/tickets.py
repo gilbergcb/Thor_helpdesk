@@ -99,13 +99,13 @@ def detail(
 
 
 @router.post("/{ticket_id}/assign", response_model=TicketRead)
-def assign(
+async def assign(
     ticket_id: int,
     payload: AssignTicketRequest,
     db: Annotated[Session, Depends(get_db)],
     agent: Annotated[Agent, Depends(get_current_agent)],
 ) -> TicketRead:
-    ticket = TicketService(db).assign(ticket_id, agent, payload.agent_id)
+    ticket = await TicketService(db).assign(ticket_id, agent, payload.agent_id)
     if ticket is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

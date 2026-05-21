@@ -1,3 +1,4 @@
+import logging
 from datetime import UTC, datetime
 
 from fastapi import HTTPException
@@ -10,6 +11,8 @@ from app.models.ticket import PendingTicketMessage, Ticket, TicketHistory, Ticke
 from app.repositories.agents import AgentRepository
 from app.repositories.tickets import TicketRepository
 from app.services.zapi import ZApiClient
+
+logger = logging.getLogger(__name__)
 
 
 class TicketService:
@@ -31,7 +34,7 @@ class TicketService:
             ticket.pending_messages = self.tickets.pending_for_group(ticket.whatsapp_group_id)
         return ticket
 
-    def assign(
+    async def assign(
         self,
         ticket_id: int,
         current_agent: Agent,
@@ -62,6 +65,7 @@ class TicketService:
         )
         self.db.commit()
         self.db.refresh(ticket)
+        await self._send_assignment_notice(ticket, assigned_agent)
         return ticket
 
     def change_status(self, ticket_id: int, status: TicketStatus, agent: Agent) -> Ticket | None:
@@ -125,6 +129,39 @@ class TicketService:
         if agent.phone:
             identity = f"{identity} ({agent.phone})"
         return f"Atendente THOR: {identity}\n\n{message}"
+
+    async def _send_assignment_notice(self, ticket: Ticket, agent: Agent) -> None:
+        identity = agent.name
+        if agent.phone:
+            identity = f"{identity} ({agent.phone})"
+        message = (
+            f"O chamado {ticket.protocol} foi assumido por {identity}.\n\n"
+            "Vamos acompanhar o atendimento por aqui."
+        )
+        try:
+            result = await ZApiClient().send_group_message(ticket.whatsapp_group.group_id, message)
+        except Exception as exc:
+            logger.warning("Falha ao avisar assunção do ticket %s: %s", ticket.id, exc)
+            return
+        external_id = result.get("messageId") or result.get("id")
+        self.db.add(
+            TicketMessage(
+                ticket=ticket,
+                direction=MessageDirection.outbound,
+                content=message,
+                external_message_id=external_id,
+                agent=agent,
+            )
+        )
+        self.db.add(
+            TicketHistory(
+                ticket=ticket,
+                agent=agent,
+                event_type=HistoryEventType.message_sent,
+                description="Aviso de assunção enviado ao grupo via Z-API",
+            )
+        )
+        self.db.commit()
 
     def link_pending_message(
         self,
