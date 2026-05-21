@@ -1,9 +1,10 @@
-import { KeyRound, LogOut, Moon, RefreshCcw, Sun } from "lucide-react";
+import { FileBarChart, KeyRound, LogOut, Moon, RefreshCcw, Sun } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 
 import { KanbanBoard } from "../components/KanbanBoard";
 import { AdminPanel } from "../components/AdminPanel";
 import { AccessVaultPanel } from "../components/AccessVaultPanel";
+import { ReportsPanel } from "../components/ReportsPanel";
 import { TicketDrawer } from "../components/TicketDrawer";
 import { PublicTicketPage } from "./PublicTicketPage";
 import { useTheme } from "../hooks/useTheme";
@@ -201,7 +202,7 @@ function Login({ onLogged }: { onLogged: () => void }) {
 function PrivateApp() {
   const [authenticated, setAuthenticated] = useState(hasToken());
   const [me, setMe] = useState<AgentMe | null>(null);
-  const [view, setView] = useState<"kanban" | "accesses" | "admin">("kanban");
+  const [view, setView] = useState<"kanban" | "accesses" | "admin" | "reports">("kanban");
   const [columns, setColumns] = useState<KanbanColumn[]>([]);
   const [selected, setSelected] = useState<Ticket | null>(null);
   const [ticketPanelOpen, setTicketPanelOpen] = useState(false);
@@ -363,6 +364,30 @@ function PrivateApp() {
             <KeyRound size={14} />
             Acessos
           </button>
+          <button
+            className="font-display"
+            onClick={() => setView("reports")}
+            style={{
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              padding: "8px 14px",
+              fontSize: 14,
+              color: view === "reports" ? "var(--ink)" : "var(--ink-soft)",
+              borderBottom:
+                view === "reports"
+                  ? "1px solid var(--accent)"
+                  : "1px solid transparent",
+              transition: "color .2s, border-color .2s",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6
+            }}
+            type="button"
+          >
+            <FileBarChart size={14} />
+            Relatórios
+          </button>
         </nav>
 
         <div className="thor-app-actions">
@@ -441,6 +466,8 @@ function PrivateApp() {
         </div>
       ) : view === "accesses" ? (
         <AccessVaultPanel />
+      ) : view === "reports" ? (
+        <ReportsPanel />
       ) : isAdmin ? (
         <AdminPanel />
       ) : (

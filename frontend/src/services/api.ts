@@ -2,6 +2,8 @@ import type {
   Agent,
   AgentMe,
   AgentRole,
+  AttendanceReport,
+  AttendanceReportOptions,
   Client,
   ClientEmployee,
   ClientAccessCredential,
@@ -346,6 +348,25 @@ export function deleteTicket(id: number) {
 
 export function getClientAccessCredentials() {
   return request<ClientAccessCredential[]>("/admin/client-access-credentials");
+}
+
+export function getAttendanceReportOptions() {
+  return request<AttendanceReportOptions>("/reports/attendance/options");
+}
+
+export function getAttendanceReport(filters: {
+  date_from?: string;
+  date_to?: string;
+  client_id?: string;
+  employee_id?: string;
+  agent_id?: string;
+}) {
+  const params = new URLSearchParams();
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value) params.set(key, value);
+  });
+  const query = params.toString();
+  return request<AttendanceReport>(`/reports/attendance${query ? `?${query}` : ""}`);
 }
 
 export function createClientAccessCredential(payload: {

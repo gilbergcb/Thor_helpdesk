@@ -195,3 +195,49 @@ export type ClientAccessCredentialReveal = {
   secret: string;
   notes: string | null;
 };
+
+export type ReportOption = {
+  id: number;
+  name: string;
+};
+
+export type AttendanceReportOptions = {
+  clients: ReportOption[];
+  employees: ReportOption[];
+  agents: ReportOption[];
+};
+
+export type AttendanceReportSummary = {
+  total: number;
+  open_total: number;
+  resolved_total: number;
+  closed_total: number;
+  avg_resolution_hours: number | null;
+  by_status: Record<string, number>;
+};
+
+export type AttendanceReportRow = {
+  id: number;
+  protocol: string;
+  title: string;
+  status: TicketStatus;
+  priority: TicketPriority;
+  opened_at: string;
+  closed_at: string | null;
+  resolution_hours: number | null;
+  client_id: number;
+  client_name: string;
+  employee_id: number | null;
+  employee_name: string | null;
+  requester_name: string | null;
+  requester_phone: string | null;
+  agent_id: number | null;
+  agent_name: string | null;
+};
+
+export type AttendanceReport = {
+  date_from: string;
+  date_to: string;
+  summary: AttendanceReportSummary;
+  tickets: AttendanceReportRow[];
+};
