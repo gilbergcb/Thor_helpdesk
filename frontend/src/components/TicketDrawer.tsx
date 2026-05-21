@@ -1,4 +1,4 @@
-import { Link2, LogIn, Plus, Send, Trash2, X } from "lucide-react";
+import { Download, FileText, Link2, LogIn, Plus, Send, Trash2, X } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 
 import {
@@ -6,12 +6,176 @@ import {
   changeStatus,
   createTicketFromPending,
   deleteTicket,
+  fetchTicketAttachmentBlobUrl,
   getTicket,
   ignorePendingMessage,
   linkPendingMessage,
   replyTicket
 } from "../services/api";
-import type { AgentMe, Ticket, TicketDetail, TicketStatus } from "../types/api";
+import type {
+  AgentMe,
+  Ticket,
+  TicketAttachment,
+  TicketDetail,
+  TicketStatus
+} from "../types/api";
+
+function formatBytes(size: number): string {
+  if (size < 1024) return `${size} B`;
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function AttachmentTile({ attachment }: { attachment: TicketAttachment }) {
+  const isImage = attachment.mime_type.startsWith("image/");
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isImage) return;
+    let cancelled = false;
+    let createdUrl: string | null = null;
+    setLoading(true);
+    fetchTicketAttachmentBlobUrl(attachment.id)
+      .then((url) => {
+        if (cancelled) {
+          URL.revokeObjectURL(url);
+          return;
+        }
+        createdUrl = url;
+        setBlobUrl(url);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Falha ao carregar anexo");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+      if (createdUrl) URL.revokeObjectURL(createdUrl);
+    };
+  }, [attachment.id, isImage]);
+
+  async function openFileBlob() {
+    setLoading(true);
+    setError(null);
+    try {
+      const url = await fetchTicketAttachmentBlobUrl(attachment.id);
+      window.open(url, "_blank", "noopener,noreferrer");
+      // best-effort revoke depois de 60s (deixa o tab abrir)
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Falha ao abrir anexo");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const label =
+    attachment.original_filename ??
+    (isImage ? `imagem-${attachment.id}` : `anexo-${attachment.id}`);
+  const sizeLabel = formatBytes(attachment.byte_size);
+
+  if (isImage) {
+    return (
+      <div
+        style={{
+          border: "1px solid var(--hairline)",
+          background: "var(--bg-elev)",
+          padding: 4,
+          maxWidth: 200
+        }}
+        title={`${label} · ${sizeLabel}`}
+      >
+        {blobUrl ? (
+          <a href={blobUrl} rel="noopener noreferrer" target="_blank">
+            <img
+              alt={label}
+              src={blobUrl}
+              style={{ display: "block", width: "100%", height: "auto" }}
+            />
+          </a>
+        ) : (
+          <div
+            style={{
+              fontSize: 11,
+              color: "var(--ink-mute)",
+              padding: 8,
+              textAlign: "center"
+            }}
+          >
+            {error ?? (loading ? "carregando..." : "—")}
+          </div>
+        )}
+        <div
+          style={{
+            fontSize: 10.5,
+            color: "var(--ink-mute)",
+            padding: "4px 2px 0",
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 6
+          }}
+        >
+          <span
+            style={{
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap"
+            }}
+          >
+            {label}
+          </span>
+          <span>{sizeLabel}</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      disabled={loading}
+      onClick={openFileBlob}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 8,
+        border: "1px solid var(--hairline)",
+        background: "var(--bg-elev)",
+        padding: "8px 10px",
+        cursor: loading ? "wait" : "pointer",
+        textAlign: "left",
+        minWidth: 200,
+        maxWidth: 320
+      }}
+      title={error ?? `${label} · ${sizeLabel}`}
+      type="button"
+    >
+      <FileText size={18} style={{ flex: "none", color: "var(--ink-soft)" }} />
+      <div style={{ display: "flex", flexDirection: "column", minWidth: 0, flex: 1 }}>
+        <strong
+          style={{
+            fontSize: 12,
+            fontWeight: 500,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap"
+          }}
+        >
+          {label}
+        </strong>
+        <small style={{ fontSize: 10.5, color: "var(--ink-mute)" }}>
+          {error ?? sizeLabel}
+        </small>
+      </div>
+      <Download size={14} style={{ flex: "none", color: "var(--ink-mute)" }} />
+    </button>
+  );
+}
 
 type Props = {
   ticket: Ticket | null;
@@ -520,6 +684,20 @@ export function TicketDrawer({ ticket, onChanged, onClose, viewer }: Props) {
                     >
                       {message.content}
                     </p>
+                  ) : null}
+                  {message.attachments && message.attachments.length > 0 ? (
+                    <div
+                      style={{
+                        marginTop: 8,
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: 8
+                      }}
+                    >
+                      {message.attachments.map((att) => (
+                        <AttachmentTile attachment={att} key={att.id} />
+                      ))}
+                    </div>
                   ) : null}
                 </div>
               </div>

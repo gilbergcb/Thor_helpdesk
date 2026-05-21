@@ -1,13 +1,17 @@
+import mimetypes
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.responses import FileResponse
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_agent, require_admin
 from app.core.database import get_db
 from app.core.tenant import check_ticket_access
 from app.models.support import Agent
-from app.models.ticket import Ticket
+from app.models.ticket import Ticket, TicketMessage, TicketMessageAttachment
+from app.services.media_storage import resolve_storage_path
 from app.schemas.ticket import (
     AssignTicketRequest,
     CreateTicketFromPendingRequest,
@@ -184,3 +188,57 @@ def delete_ticket(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket not found")
     db.delete(ticket)
     db.commit()
+
+
+# ----------------------------------------------------------------------------
+# Anexos (Fase C — atendente vê arquivos enviados via portal público).
+# Rota separada de /media/<message_id> porque attachments tem PK propria
+# em ticket_message_attachments. JWT obrigatorio + tenant check via
+# ticket da TicketMessage dona do anexo.
+# Path `/attachments/{id}` nao colide com `/{ticket_id}` porque int converter
+# do FastAPI rejeita "attachments" como ticket_id.
+# ----------------------------------------------------------------------------
+
+
+@router.get("/attachments/{attachment_id}")
+def get_ticket_attachment(
+    request: Request,
+    attachment_id: int,
+    db: Annotated[Session, Depends(get_db)],
+    agent: Annotated[Agent, Depends(get_current_agent)],
+) -> FileResponse:
+    """Serve um anexo de TicketMessage para o atendente autenticado.
+
+    Validações em cadeia:
+      1. Agent ativo (Depends(get_current_agent)).
+      2. Attachment existe e tem mensagem/ticket associado.
+      3. Tenant: atendente só vê tickets atribuídos a ele ou pool —
+         delegado a check_ticket_access (F-05, modo audit/enforce).
+    Qualquer falha → 404 sem revelar existência."""
+    row = db.scalar(
+        select(TicketMessageAttachment, TicketMessage)
+        .join(TicketMessage, TicketMessage.id == TicketMessageAttachment.ticket_message_id)
+        .where(TicketMessageAttachment.id == attachment_id)
+    )
+    if row is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Anexo não encontrado")
+    # `row` é o TicketMessageAttachment; pegamos o ticket via relacionamento.
+    msg = db.get(TicketMessage, row.ticket_message_id)
+    if msg is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Anexo órfão")
+    ticket = db.get(Ticket, msg.ticket_id)
+    if ticket is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket ausente")
+    check_ticket_access(agent, ticket, action="attachment.read", request=request)
+
+    path = resolve_storage_path(row.storage_key)
+    if path is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Arquivo ausente")
+
+    inline_mimes = {"image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf"}
+    media_type = row.mime_type or mimetypes.guess_type(str(path))[0] or "application/octet-stream"
+    headers: dict[str, str] = {}
+    if media_type not in inline_mimes:
+        safe_name = row.original_filename or f"anexo-{row.id}"
+        headers["Content-Disposition"] = f'attachment; filename="{safe_name}"'
+    return FileResponse(path, media_type=media_type, headers=headers)

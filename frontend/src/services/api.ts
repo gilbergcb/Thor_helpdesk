@@ -80,6 +80,17 @@ export function getTicket(ticketId: number) {
   return request<TicketDetail>(`/tickets/${ticketId}`);
 }
 
+export async function fetchTicketAttachmentBlobUrl(attachmentId: number): Promise<string> {
+  const response = await fetch(`${API_URL}/tickets/attachments/${attachmentId}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {}
+  });
+  if (!response.ok) {
+    throw new Error((await response.text()) || `Anexo indisponivel (HTTP ${response.status})`);
+  }
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
+}
+
 export function assignTicket(ticketId: number) {
   return request(`/tickets/${ticketId}/assign`, {
     method: "POST",
@@ -130,11 +141,33 @@ export function getPublicTicket(token: string) {
   return request<PublicTicket>(`/public/tickets/${encodeURIComponent(token)}`);
 }
 
-export function sendPublicTicketMessage(token: string, message: string) {
-  return request<PublicTicket>(`/public/tickets/${encodeURIComponent(token)}/messages`, {
-    method: "POST",
-    body: JSON.stringify({ message })
-  });
+export async function sendPublicTicketMessage(
+  token: string,
+  message: string,
+  files: File[] = []
+): Promise<PublicTicket> {
+  // Backend espera multipart/form-data (Fase A do portal de uploads).
+  // NAO setar Content-Type manualmente — o browser injeta com boundary.
+  const form = new FormData();
+  form.append("message", message);
+  for (const file of files) {
+    form.append("files", file, file.name);
+  }
+  const response = await fetch(
+    `${API_URL}/public/tickets/${encodeURIComponent(token)}/messages`,
+    { method: "POST", body: form }
+  );
+  if (!response.ok) {
+    let detail = "";
+    try {
+      const data = await response.json();
+      detail = (data && data.detail) || "";
+    } catch {
+      detail = await response.text().catch(() => "");
+    }
+    throw new Error(detail || `Falha ao enviar mensagem (HTTP ${response.status})`);
+  }
+  return response.json();
 }
 
 export function getClients() {
