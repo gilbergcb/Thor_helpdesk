@@ -26,6 +26,26 @@ class Settings(BaseSettings):
     media_storage_dir: str = "/app/media"
     public_app_url: AnyHttpUrl = "https://helpdesk.thorconsultoria.com.br"
 
+    # --- Security convergence batch 1 (feature flags) ---
+    # Cada flag aceita: "off" | "audit" | "enforce".
+    # - off     : comportamento legado, sem checagem.
+    # - audit   : checa e LOGA violações, mas NÃO bloqueia (default seguro/compatível).
+    # - enforce : bloqueia requisições que falham na checagem.
+    security_media_auth: str = "audit"
+    security_webhook_hmac: str = "audit"
+    security_ssrf_allowlist: str = "audit"
+    # Hosts permitidos no download de mídia (Z-API + CDNs WhatsApp).
+    # Separados por vírgula. Sufixos casam por endswith.
+    ssrf_allowed_hosts: str = (
+        "api.z-api.io,"
+        ".z-api.io,"
+        ".whatsapp.net,"
+        ".whatsapp.com,"
+        "mmg.whatsapp.net,"
+        ".cdninstagram.com,"
+        ".fbcdn.net"
+    )
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 
