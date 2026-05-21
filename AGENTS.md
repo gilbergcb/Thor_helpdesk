@@ -1,54 +1,21 @@
 <claude-mem-context>
 # Memory Context
 
-# [HelpDesk] recent context, 2026-05-21 8:12am GMT-3
+# [HelpDesk] recent context, 2026-05-21 3:03pm GMT-3
 
 Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision
 Format: ID TIME TYPE TITLE
 Fetch details: get_observations([IDs]) | Search: mem-search skill
 
-Stats: 50 obs (19,227t read) | 517,906t work | 96% savings
+Stats: 50 obs (19,509t read) | 301,415t work | 94% savings
 
 ### May 19, 2026
-S72 HelpDesk — add image/media reception to WhatsApp webhook and remove verbose debug logging (May 19 at 8:19 PM)
 S73 TicketDrawer now renders WhatsApp media attachments — image, audio, video, document (May 19 at 8:28 PM)
 S75 HelpDesk media storage feature fully deployed to VPS production (May 19 at 8:33 PM)
 S76 Image not appearing in HelpDesk ticket after WhatsApp test message — debugging image rendering pipeline (May 19 at 8:39 PM)
 S78 HelpDesk admin edit/delete feature deployed to production on finanpersona-vps (May 19 at 8:42 PM)
-659 8:50p ✅ Frontend TypeScript types updated with AgentRole and AgentMe
-660 " 🟣 Frontend App component gains role awareness via getMe API call
-661 8:51p 🟣 Admin UI gated by role — Cadastros tab hidden for non-admin agents
-662 8:52p 🟣 TicketDrawer restricts status transitions for atendente role
-663 " 🟣 AdminPanel agent creation form extended with role field
-664 8:54p ✅ RBAC feature deployed to production — agent role migration ran successfully
-665 8:57p 🟣 HelpDesk AdminPanel — Update schemas and routes added for Clients, Groups, and Agents
-666 " 🟣 HelpDesk admin.py — full PATCH/DELETE endpoints for Clients, WhatsApp Groups, and Agents
-667 " 🟣 HelpDesk tickets.py — admin-only PATCH and DELETE endpoints added for tickets
-668 8:58p 🟣 AdminPanel.tsx — imports updated for edit/delete API functions and action icons
-669 8:59p 🟣 AdminPanel.tsx — submit handlers upgraded to create/edit toggle; delete handlers added
-670 " 🟣 AdminPanel.tsx — Clients tab UI upgraded with inline edit mode and row action buttons
-671 9:02p 🟣 TicketDrawer.tsx — Trash2 icon and deleteTicket API function imported
-672 " 🟣 TicketDrawer.tsx — admin-only delete button added with confirm dialog
-673 9:03p 🔵 HelpDesk frontend Docker build failed on VPS deploy — npm run build exit code 1
-674 9:04p 🔴 Fixed TS2304 — Ticket type missing from api.ts import causing frontend build failure
-675 " 🟣 HelpDesk admin edit/delete feature deployed to production on finanpersona-vps
 S79 THOR-HelpDesk redesign mockup criado em design-mockup.html (May 19 at 9:04 PM)
-676 9:07p 🟣 Edit mode for WhatsApp groups form with conditional heading
-677 " 🟣 Agent edit form — optional password and conditional UI for edit mode
-678 9:09p 🔵 HelpDesk Client model missing cascade delete on related entities
-679 " 🔴 Alembic migration 202605200004 adds ON DELETE CASCADE/SET NULL to HelpDesk FK constraints
-680 9:10p ✅ Cascade migration and updated api.ts deployed to HelpDesk VPS production
-681 9:12p 🟣 AdminPanel DataTables ganham coluna "Código" (ID) em Clientes e Grupos
-682 9:17p 🔴 SQLAlchemy cascade delete configuration for client and group deletion constraints
-683 9:30p 🟣 THOR-HelpDesk redesign mockup criado em design-mockup.html
 S80 THOR-HelpDesk THOR design system deployed to VPS production (May 19 at 9:30 PM)
-684 9:33p 🔵 HelpDesk design-mockup.html — design system confirmed
-685 " 🟣 HelpDesk frontend index.html updated with new design system fonts and theme switcher
-686 9:35p 🟣 HelpDesk frontend/src/styles/index.css replaced with full THOR design system
-687 " 🔄 App.tsx redesigned with THOR editorial design system — Login and main layout migrated
-688 9:36p 🔄 TicketCard.tsx redesigned with THOR editorial design — status tags, relative timestamps, client avatar
-689 9:37p 🔄 TicketDrawer.tsx redesigned with THOR editorial layout — protocol display, metadata grid, chat bubbles, composer
-690 9:38p 🔄 AdminPanel.tsx redesigned with THOR editorial design — FormPanel, editorial tabs, thor-table, perfil chips
 691 9:39p 🟣 THOR-HelpDesk full design system port completed — build passes cleanly
 692 9:40p ✅ THOR-HelpDesk THOR design system deployed to VPS production
 S83 Parallel dual-agent security audit of HelpDesk project — manual audit + CSO skill audit running simultaneously (May 19 at 9:40 PM)
@@ -65,13 +32,46 @@ S84 SECURITY-REVIEW.md created — 23 findings across HelpDesk backend, frontend
 707 8:58p 🔵 HelpDesk security audit — JWT storage, rate limiting, and injection vector analysis
 708 " 🔵 HelpDesk Docker containers run as root — no USER directive in Dockerfiles
 709 9:01p ✅ SECURITY-REVIEW.md created — 23 findings across HelpDesk backend, frontend, and infra
+S85 SECURITY-CONVERGENCE-PLAN.md created — 6-phase security remediation plan for THOR HelpDesk (May 20 at 9:01 PM)
 710 9:02p 🔵 CSO Comprehensive Security Audit — THOR-HelpDesk: 5 Critical, 7 High Findings
 711 9:10p 🔵 THOR HelpDesk Security Review — 23 findings across SECURITY-REVIEW.md and SECURITY-REVIEW-CSO.md
 712 9:13p ✅ SECURITY-CONVERGENCE-PLAN.md created — 6-phase security remediation plan for THOR HelpDesk
-S85 SECURITY-CONVERGENCE-PLAN.md created — 6-phase security remediation plan for THOR HelpDesk (May 20 at 9:13 PM)
 ### May 21, 2026
 713 7:45a 🔵 SQL injection audit — login and public ticket token endpoints — no vulnerabilities found
 714 7:46a 🔵 SQL Injection security audit — login and public ticket token endpoints confirmed safe
+715 8:13a 🔵 Public Ticket Portal Routing Coupling Issue Identified in HelpDesk
+716 9:02a 🔵 HelpDesk public ticket endpoint lacks rate limiting — infrastructure exists but not applied
+717 9:03a 🟣 Rate limiting and token validation added to HelpDesk public ticket portal
+718 " 🟣 Referrer-Policy tightened to same-origin to prevent public ticket token leakage
+719 " 🟣 Security regression tests added for public ticket link validation and rate limits
+720 9:04a 🔴 pytest ModuleNotFoundError for 'app' fixed by adding conftest.py with sys.path injection
+721 " 🔄 Token validation logic extracted from app/api/public.py into app/core/public_links.py
+722 9:05a ✅ JWT library migrated from python-jose to PyJWT — dependency tree slimmed significantly
+723 9:07a 🔵 docker compose restart does not re-interpolate env vars — must use docker compose up -d to recreate container
+724 9:08a ✅ Security hardening of public ticket links committed to branch security/convergence-batch-1
+725 9:09a ✅ security/convergence-batch-1 branch merged into main — full security batch landed
+726 " ✅ HelpDesk security convergence batch deployed to finanpersona-vps via rsync from git archive
+727 9:10a ✅ Docker images rebuilt on VPS with PyJWT, slowapi, and all security packages — both backend and frontend built successfully
+728 " 🔵 Production smoke tests confirmed: health OK, Referrer-Policy same-origin active, SQL injection token rejected with 404
+729 " 🔴 Token fingerprint in logs improved — prefix replaced with SHA-256 hash to prevent token leakage via log aggregators
+730 9:11a ✅ Token fingerprint fix committed, pushed, and deployed to VPS — backend rebuilt in seconds using Docker cache
+731 9:12a ✅ HelpDesk security hardening fully deployed and validated — main branch clean, all production smoke tests green
+732 9:57a 🔵 HelpDesk TicketService — change_status lacks WhatsApp group notification
+733 " 🟣 WhatsApp group notification added for ticket resolved (resolvido) status
+734 9:58a 🟣 HelpDesk resolved-ticket group notification committed to feature branch
+735 9:59a 🟣 feature/public-portal-uploads merged to main — public portal uploads + ticket resolution notice
+736 " 🔴 Removed unused TicketPublicLink import from app/api/public.py after merge
+738 10:00a ✅ HelpDesk deployed to VPS — Docker images rebuilt and containers recreated
+739 " 🔴 Production NameError in webhook.py — raw_media_url undefined after deploy
+740 10:01a 🔴 Fixed NameError in webhook.py _save_pending_message — raw_media_url not passed as parameter
+741 " ✅ Hotfix deployed to VPS — webhook raw_media_url fix redeployed to production
+742 2:21p 🔵 AccessVaultPanel.tsx — access_url and username displayed in plaintext in table and cards
+743 2:22p 🟣 AccessVaultPanel — access_url masked in list view using maskHost() helper
+S89 AccessVaultPanel — access_url masked in list view using maskHost() helper (May 21 at 2:22 PM)
+744 2:28p 🔵 HelpDesk frontend dev server not running on port 5173
+745 " 🔵 HelpDesk frontend has 456 lines of uncommitted changes across 4 files
+746 2:29p 🔵 HelpDesk git history — last committed feature is attendance reports panel
+747 2:31p 🟣 AccessVaultPanel masks URL/Host in vault listing — revealed only after view token
 
-Access 518k tokens of past work via get_observations([IDs]) or mem-search skill.
+Access 301k tokens of past work via get_observations([IDs]) or mem-search skill.
 </claude-mem-context>
