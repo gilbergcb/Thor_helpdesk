@@ -15,7 +15,8 @@ RUN pip install --no-cache-dir .
 COPY app ./app
 COPY alembic ./alembic
 COPY alembic.ini ./alembic.ini
+COPY scripts ./scripts
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+CMD ["sh", "-c", "alembic upgrade head && python -m scripts.bootstrap_admin && uvicorn app.main:app --host 0.0.0.0 --port 8000"]

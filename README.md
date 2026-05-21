@@ -36,10 +36,16 @@ Acesse:
 - Frontend: `http://localhost:8080`
 - Backend OpenAPI: `http://localhost:8000/docs`
 
-Login inicial:
+Login inicial (criado pelo script `scripts/bootstrap_admin.py` no
+primeiro `docker compose up`, somente se ainda não houver admin no DB):
 
-- E-mail: `admin@helpdesk.com.br`
-- Senha: `admin123`
+- Defina antes de subir:
+  ```
+  INITIAL_ADMIN_EMAIL=seu.admin@exemplo.com
+  INITIAL_ADMIN_PASSWORD=alguma-senha-bem-forte-12-chars-min
+  ```
+- O agente é criado com `must_change_password=true`; troque na primeira sessão.
+- Em ambientes onde o admin já existe, o script é no-op.
 
 Grupo inicial para testes:
 

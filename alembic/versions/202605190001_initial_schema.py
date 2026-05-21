@@ -198,21 +198,11 @@ def upgrade() -> None:
             """
         )
     )
-    op.execute(
-        sa.text(
-            """
-            INSERT INTO agents (id, name, email, password_hash, is_active)
-            VALUES (
-              1,
-              'Administrador',
-              'admin@helpdesk.com.br',
-              '$2b$12$5/RgHChRKWIYKiL/ZGkHi.tfPlt9CUub5B15xUxAXXPX19IA1t2z.',
-              true
-            )
-            ON CONFLICT (id) DO NOTHING
-            """
-        )
-    )
+    # F-06 Phase 2.1: seed de admin removido daqui.
+    # Bootstrap inicial agora é feito por scripts/bootstrap_admin.py
+    # (rodado pelo CMD do Docker antes do uvicorn) usando as envs
+    # INITIAL_ADMIN_EMAIL e INITIAL_ADMIN_PASSWORD, criando o agente
+    # com must_change_password=True.
 
 
 def downgrade() -> None:
