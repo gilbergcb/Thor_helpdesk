@@ -12,7 +12,9 @@ RUN groupadd --system --gid 10001 app \
     && useradd  --system --uid 10001 --gid 10001 --home-dir /app --shell /usr/sbin/nologin app
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends build-essential \
+    && apt-get install -y --no-install-recommends \
+         build-essential \
+         libmagic1 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY pyproject.toml ./

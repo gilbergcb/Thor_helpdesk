@@ -6,6 +6,7 @@ from app.models.ticket import (
     Ticket,
     TicketHistory,
     TicketMessage,
+    TicketMessageAttachment,
     TicketPublicLink,
 )
 from app.models.whatsapp import WhatsAppGroup, WhatsAppUser
@@ -22,6 +23,7 @@ __all__ = [
     "Ticket",
     "TicketHistory",
     "TicketMessage",
+    "TicketMessageAttachment",
     "PendingTicketMessage",
     "TicketPublicLink",
     "WhatsAppGroup",

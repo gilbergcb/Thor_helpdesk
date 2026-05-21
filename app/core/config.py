@@ -49,6 +49,10 @@ class Settings(BaseSettings):
     security_ratelimit_login: str = "on"
     # Protecao compatível para o portal publico de ticket.
     security_public_link_guard: str = "on"
+    # F-public-uploads: limites do upload via portal.
+    public_upload_max_bytes: int = 15 * 1024 * 1024  # 15 MB por arquivo
+    public_upload_max_files_per_request: int = 3
+    public_upload_quota_bytes_per_hour: int = 50 * 1024 * 1024  # 50 MB / token / hora
     # Hosts permitidos no download de mídia (Z-API + CDNs WhatsApp).
     # Separados por vírgula. Sufixos casam por endswith.
     ssrf_allowed_hosts: str = (

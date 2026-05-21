@@ -69,7 +69,12 @@ class TicketService:
         await self._send_assignment_notice(ticket, assigned_agent)
         return ticket
 
-    def change_status(self, ticket_id: int, status: TicketStatus, agent: Agent) -> Ticket | None:
+    async def change_status(
+        self,
+        ticket_id: int,
+        status: TicketStatus,
+        agent: Agent,
+    ) -> Ticket | None:
         ticket = self.db.get(Ticket, ticket_id)
         if ticket is None:
             return None
@@ -94,6 +99,8 @@ class TicketService:
         )
         self.db.commit()
         self.db.refresh(ticket)
+        if old_status != status and status == TicketStatus.resolvido:
+            await self._send_resolution_notice(ticket, agent)
         return ticket
 
     async def reply(self, ticket_id: int, message: str, agent: Agent) -> TicketMessage | None:
@@ -162,6 +169,39 @@ class TicketService:
                 agent=agent,
                 event_type=HistoryEventType.message_sent,
                 description="Aviso de assunção enviado ao grupo via Z-API",
+            )
+        )
+        self.db.commit()
+
+    async def _send_resolution_notice(self, ticket: Ticket, agent: Agent) -> None:
+        identity = agent.name
+        if agent.phone:
+            identity = f"{identity} ({agent.phone})"
+        message = (
+            f"O chamado {ticket.protocol} foi marcado como resolvido por {identity}.\n\n"
+            "Se precisar de algo mais, responda por aqui."
+        )
+        try:
+            result = await ZApiClient().send_group_message(ticket.whatsapp_group.group_id, message)
+        except Exception as exc:
+            logger.warning("Falha ao avisar resolução do ticket %s: %s", ticket.id, exc)
+            return
+        external_id = result.get("messageId") or result.get("id")
+        self.db.add(
+            TicketMessage(
+                ticket=ticket,
+                direction=MessageDirection.outbound,
+                content=message,
+                external_message_id=external_id,
+                agent=agent,
+            )
+        )
+        self.db.add(
+            TicketHistory(
+                ticket=ticket,
+                agent=agent,
+                event_type=HistoryEventType.message_sent,
+                description="Aviso de resolução enviado ao grupo via Z-API",
             )
         )
         self.db.commit()

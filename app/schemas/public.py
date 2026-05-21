@@ -12,12 +12,29 @@ class PublicAgentRead(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class PublicTicketAttachmentRead(BaseModel):
+    """Anexo individual de uma mensagem visivel no portal publico.
+    A `url` e construida pela camada de servico injetando o token corrente
+    (rota `/public/tickets/<token>/attachments/<id>`) — token NAO entra no
+    body do response como campo solto."""
+
+    id: int
+    mime_type: str
+    byte_size: int
+    original_filename: str | None = None
+    source: str
+    url: str
+
+    model_config = {"from_attributes": True}
+
+
 class PublicTicketMessageRead(BaseModel):
     id: int
     direction: MessageDirection
     content: str
     media_type: str | None = None
     media_storage_key: str | None = None
+    attachments: list[PublicTicketAttachmentRead] = []
     created_at: datetime
 
     model_config = {"from_attributes": True}
