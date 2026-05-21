@@ -1,8 +1,15 @@
-import { FormEvent, useEffect, useState } from "react";
-import { Send } from "lucide-react";
+import {
+  ClipboardEvent,
+  FormEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react";
+import { FileText, Paperclip, Send, X } from "lucide-react";
 
 import { getPublicTicket, sendPublicTicketMessage } from "../services/api";
-import type { PublicTicket } from "../types/api";
+import type { PublicTicket, PublicTicketAttachment } from "../types/api";
 
 type Props = {
   token: string;
@@ -17,11 +24,111 @@ const statusLabels: Record<string, string> = {
   fechado: "fechado"
 };
 
+// Espelha ALLOWED_UPLOAD_MIMES do backend (app/services/media_storage.py).
+// Mantenha sincronizado.
+const ALLOWED_MIMES = new Set<string>([
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+  "application/pdf",
+  "text/plain",
+  "text/csv",
+  "application/json"
+]);
+
+const MAX_BYTES = 15 * 1024 * 1024; // 15 MB por arquivo
+const MAX_FILES = 3; // por request
+const ACCEPT_ATTR =
+  "image/png,image/jpeg,image/webp,image/gif,application/pdf,text/plain,text/csv,application/json,.png,.jpg,.jpeg,.webp,.gif,.pdf,.txt,.csv,.json";
+
+type Pending = {
+  id: string; // local-only (uuid-ish)
+  file: File;
+  previewUrl: string | null; // object URL para imagens
+};
+
+function formatBytes(size: number): string {
+  if (size < 1024) return `${size} B`;
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function isImageMime(mime: string): boolean {
+  return mime.startsWith("image/");
+}
+
+function randomId(): string {
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+function classifyFile(file: File): string | null {
+  if (file.size === 0) return "arquivo vazio";
+  if (file.size > MAX_BYTES) {
+    return `arquivo maior que ${MAX_BYTES / (1024 * 1024)} MB`;
+  }
+  // type pode vir vazio (browser não detectou) — backend ainda valida via libmagic;
+  // mas se vier conhecido e fora da whitelist, bloqueia já aqui.
+  if (file.type && !ALLOWED_MIMES.has(file.type)) {
+    return `tipo nao suportado: ${file.type}`;
+  }
+  return null;
+}
+
+function AttachmentBadge({ attachment }: { attachment: PublicTicketAttachment }) {
+  const sizeLabel = formatBytes(attachment.byte_size);
+  if (isImageMime(attachment.mime_type)) {
+    return (
+      <a
+        className="thor-public-attachment is-image"
+        href={attachment.url}
+        rel="noopener noreferrer"
+        target="_blank"
+        title={attachment.original_filename ?? `imagem ${attachment.id}`}
+      >
+        <img alt={attachment.original_filename ?? "anexo"} src={attachment.url} />
+        <span>{sizeLabel}</span>
+      </a>
+    );
+  }
+  return (
+    <a
+      className="thor-public-attachment is-file"
+      href={attachment.url}
+      rel="noopener noreferrer"
+      target="_blank"
+      download={attachment.original_filename ?? `anexo-${attachment.id}`}
+    >
+      <FileText size={18} />
+      <div>
+        <strong>{attachment.original_filename ?? `anexo-${attachment.id}`}</strong>
+        <small>{sizeLabel}</small>
+      </div>
+    </a>
+  );
+}
+
 export function PublicTicketPage({ token }: Props) {
   const [ticket, setTicket] = useState<PublicTicket | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [pending, setPending] = useState<Pending[]>([]);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // limpa object URLs ao desmontar ou trocar a lista
+  useEffect(() => {
+    return () => {
+      pending.forEach((p) => p.previewUrl && URL.revokeObjectURL(p.previewUrl));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const canSend = useMemo(() => {
+    if (busy) return false;
+    if (pending.length > 0) return true;
+    return Boolean(message.trim());
+  }, [busy, message, pending.length]);
 
   async function load() {
     setError("");
@@ -37,20 +144,96 @@ export function PublicTicketPage({ token }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
+  function appendFiles(incoming: FileList | File[]) {
+    const arr = Array.from(incoming);
+    if (!arr.length) return;
+    const errors: string[] = [];
+    setPending((current) => {
+      const next = [...current];
+      for (const file of arr) {
+        if (next.length >= MAX_FILES) {
+          errors.push(`Máximo de ${MAX_FILES} arquivos por envio`);
+          break;
+        }
+        const reason = classifyFile(file);
+        if (reason) {
+          errors.push(`${file.name || "arquivo"}: ${reason}`);
+          continue;
+        }
+        next.push({
+          id: randomId(),
+          file,
+          previewUrl: isImageMime(file.type) ? URL.createObjectURL(file) : null
+        });
+      }
+      return next;
+    });
+    if (errors.length) {
+      setError(errors.join(" • "));
+    } else {
+      setError("");
+    }
+  }
+
+  function removePending(id: string) {
+    setPending((current) => {
+      const target = current.find((p) => p.id === id);
+      if (target?.previewUrl) URL.revokeObjectURL(target.previewUrl);
+      return current.filter((p) => p.id !== id);
+    });
+  }
+
+  function clearPending() {
+    setPending((current) => {
+      current.forEach((p) => p.previewUrl && URL.revokeObjectURL(p.previewUrl));
+      return [];
+    });
+  }
+
+  function handlePaste(event: ClipboardEvent<HTMLTextAreaElement>) {
+    const items = event.clipboardData?.items;
+    if (!items) return;
+    const files: File[] = [];
+    for (const item of Array.from(items)) {
+      if (item.kind === "file") {
+        const file = item.getAsFile();
+        if (file) files.push(file);
+      }
+    }
+    if (files.length === 0) return; // só texto, deixa o textarea processar normal
+    event.preventDefault();
+    appendFiles(files);
+  }
+
+  function openFilePicker() {
+    fileInputRef.current?.click();
+  }
+
+  function onFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    if (event.target.files) appendFiles(event.target.files);
+    event.target.value = ""; // permite escolher o mesmo arquivo de novo se removeu
+  }
+
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    if (!message.trim()) return;
+    if (!canSend) return;
     setBusy(true);
     setError("");
     try {
-      setTicket(await sendPublicTicketMessage(token, message.trim()));
+      const files = pending.map((p) => p.file);
+      const next = await sendPublicTicketMessage(token, message.trim(), files);
+      setTicket(next);
       setMessage("");
-    } catch {
-      setError("Não foi possível enviar a mensagem.");
+      clearPending();
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : "Não foi possível enviar a mensagem.";
+      setError(detail);
     } finally {
       setBusy(false);
     }
   }
+
+  const remainingSlots = MAX_FILES - pending.length;
 
   return (
     <main className="thor-public-page">
@@ -105,7 +288,14 @@ export function PublicTicketPage({ token }: Props) {
                 return (
                   <article className={isAgent ? "is-agent" : "is-client"} key={item.id}>
                     <span>{isAgent ? "Atendimento THOR" : "Cliente"}</span>
-                    <p>{item.content}</p>
+                    {item.content ? <p>{item.content}</p> : null}
+                    {item.attachments && item.attachments.length > 0 ? (
+                      <div className="thor-public-attachments">
+                        {item.attachments.map((att) => (
+                          <AttachmentBadge attachment={att} key={att.id} />
+                        ))}
+                      </div>
+                    ) : null}
                     <time>{new Date(item.created_at).toLocaleString("pt-BR")}</time>
                   </article>
                 );
@@ -115,10 +305,66 @@ export function PublicTicketPage({ token }: Props) {
             <form className="thor-public-composer" onSubmit={handleSubmit}>
               <textarea
                 onChange={(event) => setMessage(event.target.value)}
-                placeholder="Digite sua mensagem para o atendimento..."
+                onPaste={handlePaste}
+                placeholder="Digite sua mensagem ou cole um print com Ctrl+V..."
                 value={message}
               />
-              <button className="thor-btn" disabled={busy || !message.trim()} type="submit">
+
+              <div className="thor-public-composer-toolbar">
+                <button
+                  className="thor-btn-ghost"
+                  disabled={busy || remainingSlots <= 0}
+                  onClick={openFilePicker}
+                  title={
+                    remainingSlots > 0
+                      ? `Anexar arquivo (até ${remainingSlots} restante${remainingSlots === 1 ? "" : "s"})`
+                      : "Limite de arquivos atingido"
+                  }
+                  type="button"
+                >
+                  <Paperclip size={16} /> Anexar
+                </button>
+                <small>
+                  Aceita PNG, JPG, WebP, GIF, PDF, TXT, CSV, JSON • até 15 MB por arquivo • máximo 3
+                </small>
+                <input
+                  accept={ACCEPT_ATTR}
+                  multiple
+                  onChange={onFileChange}
+                  ref={fileInputRef}
+                  style={{ display: "none" }}
+                  type="file"
+                />
+              </div>
+
+              {pending.length > 0 ? (
+                <ul className="thor-public-composer-pending">
+                  {pending.map((p) => (
+                    <li className={isImageMime(p.file.type) ? "is-image" : "is-file"} key={p.id}>
+                      {p.previewUrl ? (
+                        <img alt={p.file.name} src={p.previewUrl} />
+                      ) : (
+                        <FileText size={20} />
+                      )}
+                      <div>
+                        <strong title={p.file.name}>{p.file.name}</strong>
+                        <small>{formatBytes(p.file.size)}</small>
+                      </div>
+                      <button
+                        aria-label={`Remover ${p.file.name}`}
+                        className="thor-public-composer-remove"
+                        disabled={busy}
+                        onClick={() => removePending(p.id)}
+                        type="button"
+                      >
+                        <X size={14} />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+
+              <button className="thor-btn" disabled={!canSend} type="submit">
                 <Send size={16} /> Enviar mensagem
               </button>
             </form>

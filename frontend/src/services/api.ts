@@ -130,11 +130,33 @@ export function getPublicTicket(token: string) {
   return request<PublicTicket>(`/public/tickets/${encodeURIComponent(token)}`);
 }
 
-export function sendPublicTicketMessage(token: string, message: string) {
-  return request<PublicTicket>(`/public/tickets/${encodeURIComponent(token)}/messages`, {
-    method: "POST",
-    body: JSON.stringify({ message })
-  });
+export async function sendPublicTicketMessage(
+  token: string,
+  message: string,
+  files: File[] = []
+): Promise<PublicTicket> {
+  // Backend espera multipart/form-data (Fase A do portal de uploads).
+  // NAO setar Content-Type manualmente — o browser injeta com boundary.
+  const form = new FormData();
+  form.append("message", message);
+  for (const file of files) {
+    form.append("files", file, file.name);
+  }
+  const response = await fetch(
+    `${API_URL}/public/tickets/${encodeURIComponent(token)}/messages`,
+    { method: "POST", body: form }
+  );
+  if (!response.ok) {
+    let detail = "";
+    try {
+      const data = await response.json();
+      detail = (data && data.detail) || "";
+    } catch {
+      detail = await response.text().catch(() => "");
+    }
+    throw new Error(detail || `Falha ao enviar mensagem (HTTP ${response.status})`);
+  }
+  return response.json();
 }
 
 export function getClients() {
