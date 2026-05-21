@@ -1,6 +1,8 @@
 import base64
 import hashlib
 import secrets
+import uuid
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
 import jwt
@@ -73,18 +75,42 @@ def decrypt_secret(value: str | None) -> str | None:
         return old.decrypt(raw).decode("utf-8")
 
 
+@dataclass(frozen=True)
+class DecodedToken:
+    subject: str
+    jti: str | None
+    expires_at: datetime | None
+
+
 def create_access_token(subject: str) -> str:
+    """F-12 parcial: inclui `jti` (uuid4) para suportar revogação via logout.
+    Tokens emitidos pela versão antiga (sem jti) continuam válidos no decode."""
     settings = get_settings()
     expires_at = datetime.now(UTC) + timedelta(minutes=settings.access_token_expire_minutes)
-    payload = {"sub": subject, "exp": expires_at}
+    payload = {
+        "sub": subject,
+        "exp": expires_at,
+        "jti": uuid.uuid4().hex,
+    }
     return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 
 
 def decode_access_token(token: str) -> str | None:
+    """Compat: retorna só o subject (rotas antigas)."""
+    decoded = decode_access_token_full(token)
+    return decoded.subject if decoded else None
+
+
+def decode_access_token_full(token: str) -> DecodedToken | None:
     settings = get_settings()
     try:
         payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
     except PyJWTError:
         return None
     subject = payload.get("sub")
-    return str(subject) if subject else None
+    if not subject:
+        return None
+    exp = payload.get("exp")
+    expires_at = datetime.fromtimestamp(exp, tz=UTC) if isinstance(exp, int | float) else None
+    jti = payload.get("jti")
+    return DecodedToken(subject=str(subject), jti=str(jti) if jti else None, expires_at=expires_at)

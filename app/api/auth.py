@@ -1,11 +1,15 @@
+from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_agent_allow_password_change
+from app.api.deps import bearer_scheme, get_current_agent_allow_password_change
 from app.core.database import get_db
 from app.core.ratelimit import limiter, ratelimit_active
+from app.core.security import decode_access_token_full
+from app.models.security import RevokedToken
 from app.models.support import Agent
 from app.schemas.auth import AgentMe, ChangePasswordRequest, LoginRequest, TokenResponse
 from app.services.auth import AuthService
@@ -66,3 +70,26 @@ def change_password(
             detail="Senha atual inválida",
         )
     return changed
+
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+def logout(
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(bearer_scheme)],
+    agent: Annotated[Agent, Depends(get_current_agent_allow_password_change)],
+    db: Annotated[Session, Depends(get_db)],
+) -> None:
+    """F-12 parcial: insere o `jti` em revoked_tokens. Próximas requisições
+    com o mesmo token retornam 401. Tokens antigos (sem jti) não podem ser
+    revogados — expirarão naturalmente em access_token_expire_minutes."""
+    decoded = decode_access_token_full(credentials.credentials)
+    if decoded is None or decoded.jti is None:
+        # token legado sem jti — nada a revogar; logout silencioso (frontend
+        # apaga o token local de qualquer jeito).
+        return None
+    # idempotente: se já está revogado, no-op.
+    if db.get(RevokedToken, decoded.jti) is not None:
+        return None
+    expires_at = decoded.expires_at or (datetime.now(UTC) + timedelta(hours=24))
+    db.add(RevokedToken(jti=decoded.jti, expires_at=expires_at, agent_id=agent.id))
+    db.commit()
+    return None

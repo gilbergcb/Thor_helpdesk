@@ -36,7 +36,12 @@ class WebhookService:
         group_external_id = payload.normalized_group_id
         sender_phone = payload.normalized_sender_phone
         content = payload.normalized_content.strip()
-        media_url = payload.media_url
+        # F-19 Phase 5.4: media_url_for_storage descarta query string
+        # (assinaturas/expirações Z-API) — é o que será persistido em
+        # TicketMessage.media_url. O download usa raw_media_url (com query)
+        # porque a query pode conter assinatura necessária para baixar.
+        raw_media_url = payload.media_url
+        media_url = raw_media_url.split("?")[0] if raw_media_url else None
         media_type = payload.media_type
 
         is_new_ticket = content.lower().startswith(TRIGGER)
@@ -106,7 +111,7 @@ class WebhookService:
 
         stored_content = content or MEDIA_PLACEHOLDER.get(media_type or "", "[mídia]")
         storage_key = (
-            download_to_storage(media_url, payload.media_mime_type) if media_url else None
+            download_to_storage(raw_media_url, payload.media_mime_type) if raw_media_url else None
         )
         self.db.add(
             TicketMessage(
@@ -156,7 +161,7 @@ class WebhookService:
     ) -> None:
         stored_content = content or MEDIA_PLACEHOLDER.get(media_type or "", "[mídia]")
         storage_key = (
-            download_to_storage(media_url, payload.media_mime_type) if media_url else None
+            download_to_storage(raw_media_url, payload.media_mime_type) if raw_media_url else None
         )
         self.db.add(
             PendingTicketMessage(
