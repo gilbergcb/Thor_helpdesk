@@ -33,7 +33,11 @@ class ZApiWebhookPayload(BaseModel):
     media_mime_type: str | None = None
     caption: str | None = None
 
-    model_config = {"populate_by_name": True, "extra": "allow"}
+    # F-17 Phase 4.6: extra="ignore" — descarta campos desconhecidos do
+    # payload Z-API em vez de armazená-los no modelo. Reduz surface de
+    # injecao e bytes processados. flatten_common_payloads continua
+    # tolerante a estruturas variadas via lookup explicito.
+    model_config = {"populate_by_name": True, "extra": "ignore"}
 
     @model_validator(mode="before")
     @classmethod

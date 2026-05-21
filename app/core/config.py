@@ -42,6 +42,9 @@ class Settings(BaseSettings):
     security_media_auth: str = "audit"
     security_webhook_hmac: str = "audit"
     security_ssrf_allowlist: str = "audit"
+    # F-05 Phase 4.1: tenant isolation em /tickets/*. Default audit
+    # durante janela de 7 dias antes do flip para enforce.
+    security_tenant_isolation: str = "audit"
     # F-09: aceita "on"/"off" (mapeados internamente para enforce/off).
     security_ratelimit_login: str = "on"
     # Hosts permitidos no download de mídia (Z-API + CDNs WhatsApp).
