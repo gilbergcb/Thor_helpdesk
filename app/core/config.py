@@ -19,6 +19,10 @@ class Settings(BaseSettings):
 
     jwt_secret_key: str = "change-me-in-production"
     vault_secret_key: str | None = None
+    # F-04 / Phase 2.2 — chave antiga aceita só em decifragem durante rotação.
+    # Setar via env durante a janela de rotação; remover após rodar
+    # `re_encrypt_all_credentials`.
+    vault_secret_key_old: str | None = None
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 * 8
 

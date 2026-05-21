@@ -4,7 +4,7 @@ import secrets
 from datetime import UTC, datetime, timedelta
 
 import jwt
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 from jwt import PyJWTError
 from passlib.context import CryptContext
 
@@ -33,23 +33,44 @@ def hash_public_token(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
-def _vault() -> Fernet:
-    settings = get_settings()
-    secret = settings.vault_secret_key or settings.jwt_secret_key
+def _fernet_for(secret: str) -> Fernet:
     digest = hashlib.sha256(secret.encode("utf-8")).digest()
     return Fernet(base64.urlsafe_b64encode(digest))
 
 
+def _vault() -> Fernet:
+    settings = get_settings()
+    secret = settings.vault_secret_key or settings.jwt_secret_key
+    return _fernet_for(secret)
+
+
+def _vault_old() -> Fernet | None:
+    """Phase 2.2: chave antiga aceita só em decifragem durante janela de rotação."""
+    settings = get_settings()
+    if not settings.vault_secret_key_old:
+        return None
+    return _fernet_for(settings.vault_secret_key_old)
+
+
 def encrypt_secret(value: str | None) -> str | None:
+    """Sempre cifra com chave atual."""
     if value is None:
         return None
     return _vault().encrypt(value.encode("utf-8")).decode("utf-8")
 
 
 def decrypt_secret(value: str | None) -> str | None:
+    """Tenta chave nova primeiro; se setada, cai pra antiga (compat rotação)."""
     if value is None:
         return None
-    return _vault().decrypt(value.encode("utf-8")).decode("utf-8")
+    raw = value.encode("utf-8")
+    try:
+        return _vault().decrypt(raw).decode("utf-8")
+    except InvalidToken:
+        old = _vault_old()
+        if old is None:
+            raise
+        return old.decrypt(raw).decode("utf-8")
 
 
 def create_access_token(subject: str) -> str:
