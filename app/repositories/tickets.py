@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import desc, func, select
+from sqlalchemy import desc, select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.models.client import ClientEmployee
@@ -22,10 +22,19 @@ class TicketRepository:
 
     def next_protocol(self) -> str:
         today = datetime.now(UTC).strftime("%Y%m%d")
-        total_today = self.db.scalar(
-            select(func.count(Ticket.id)).where(Ticket.protocol.like(f"{today}-%"))
+        latest_protocol = self.db.scalar(
+            select(Ticket.protocol)
+            .where(Ticket.protocol.like(f"{today}-%"))
+            .order_by(desc(Ticket.protocol))
+            .limit(1)
         )
-        return f"{today}-{total_today + 1:05d}"
+        if not latest_protocol:
+            return f"{today}-00001"
+        try:
+            latest_number = int(latest_protocol.rsplit("-", 1)[1])
+        except (IndexError, ValueError):
+            latest_number = 0
+        return f"{today}-{latest_number + 1:05d}"
 
     def latest_open_for_group(self, group_id: int) -> Ticket | None:
         return self.db.scalar(
