@@ -154,7 +154,7 @@ frontend/src/components componentes do painel
 db/init            seed inicial do PostgreSQL
 ```
 
-## Observações de produção
+## Observações de produção#
 
 - O webhook atual é público; adicione validação de token/assinatura se a Z-API do seu plano fornecer segredo por webhook.
 - Cadastros administrativos de clientes, grupos e atendentes ainda podem ser feitos por SQL ou por endpoints futuros.
