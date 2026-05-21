@@ -10,7 +10,7 @@ RUN npm run build
 
 # F-14 Phase 4.2: nginx-unprivileged escuta em 8080 e roda como uid 101
 # (nginx) sem CAP_NET_BIND_SERVICE — sem root no runtime.
-FROM nginxinc/nginx-unprivileged:1.27-alpine
+FROM nginxinc/nginx-unprivileged:1.31-alpine
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 # F-16: snippet de security headers em /etc/nginx/snippets para nao
 # ser auto-carregado por conf.d/*.conf (so include explicito).
