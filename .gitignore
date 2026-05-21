@@ -17,3 +17,8 @@ frontend/tsconfig.tsbuildinfo
 
 .DS_Store
 *.log
+
+# Segredos cifrados baixados localmente para conferência (NUNCA commitar)
+secrets/
+*.env.enc
+new_secrets.env*
