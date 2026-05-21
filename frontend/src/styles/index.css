@@ -588,6 +588,132 @@ select {
   justify-content: flex-end;
 }
 
+/* ---------- Atendimento workspace ---------- */
+.thor-kanban-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(420px, 28vw, 520px);
+  height: calc(100vh - 82px);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.thor-kanban-panel {
+  min-width: 0;
+  overflow: hidden;
+  padding: clamp(16px, 2vw, 24px);
+}
+
+.thor-kanban-board {
+  display: grid;
+  gap: 16px;
+  height: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 12px;
+  scrollbar-width: thin;
+}
+
+.thor-kanban-board > section {
+  min-width: 260px;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.thor-kanban-board > section > div {
+  max-height: calc(100% - 52px);
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+}
+
+.thor-ticket-shell {
+  min-width: 0;
+  height: 100%;
+  border-left: 1px solid var(--hairline);
+  background: var(--bg-elev);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.thor-ticket-drawer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
+  background: var(--bg-elev);
+}
+
+.thor-ticket-head {
+  flex: 0 0 auto;
+  min-width: 0;
+  padding: 18px 20px 14px;
+}
+
+.thor-ticket-titlebar {
+  min-width: 0;
+  padding-right: 34px;
+}
+
+.thor-ticket-titlebar > div:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.thor-ticket-head h2 {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.thor-ticket-meta-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.thor-ticket-meta-grid > div {
+  min-width: 0;
+}
+
+.thor-ticket-meta-grid > div > div:last-child {
+  overflow-wrap: anywhere;
+}
+
+.thor-ticket-thread {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 18px 20px;
+}
+
+.thor-ticket-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+  width: 32px;
+  height: 32px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.thor-ticket-close:hover {
+  border-color: var(--hairline-strong);
+  color: var(--ink);
+}
+
+.thor-ticket-backdrop {
+  display: none;
+}
+
 /* ---------- Admin registrations ---------- */
 .thor-admin-page {
   padding-inline: clamp(16px, 2vw, 32px);
@@ -1116,6 +1242,50 @@ select {
   }
 }
 
+@media (max-width: 1279px) {
+  .thor-kanban-workspace {
+    grid-template-columns: minmax(0, 1fr);
+    height: calc(100vh - 132px);
+    min-height: 520px;
+  }
+
+  .thor-ticket-shell {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    width: min(560px, 92vw);
+    height: 100vh;
+    transform: translateX(102%);
+    transition: transform 0.22s ease;
+  }
+
+  .thor-kanban-workspace.detail-open .thor-ticket-shell {
+    transform: translateX(0);
+  }
+
+  .thor-ticket-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: block;
+    background: color-mix(in srgb, #15120e 34%, transparent);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .thor-kanban-workspace.detail-open .thor-ticket-backdrop {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .thor-ticket-close {
+    display: inline-flex;
+  }
+}
+
 @media (max-width: 820px) {
   .thor-app-header {
     padding: 14px 18px;
@@ -1199,6 +1369,51 @@ select {
     max-height: min(68vh, 560px);
     overflow: auto;
     position: fixed;
+  }
+
+  .thor-kanban-workspace {
+    height: calc(100vh - 180px);
+    min-height: 480px;
+  }
+
+  .thor-kanban-panel {
+    padding: 14px;
+  }
+
+  .thor-ticket-shell {
+    width: 100vw;
+  }
+
+  .thor-ticket-head {
+    padding: 16px;
+  }
+
+  .thor-ticket-titlebar {
+    align-items: flex-start !important;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .thor-ticket-meta-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .thor-ticket-thread {
+    padding: 16px;
+  }
+
+  .thor-pending-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .thor-pending-head p {
+    text-align: left;
+  }
+
+  .thor-pending-actions .thor-btn {
+    flex: 1 1 auto;
+    justify-content: center;
   }
 }
 

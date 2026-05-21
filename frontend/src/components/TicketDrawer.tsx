@@ -16,6 +16,7 @@ import type { AgentMe, Ticket, TicketDetail, TicketStatus } from "../types/api";
 type Props = {
   ticket: Ticket | null;
   onChanged: () => void;
+  onClose?: () => void;
   viewer?: AgentMe | null;
 };
 
@@ -50,7 +51,7 @@ function splitProtocol(protocol: string): { main: string; suffix: string } {
   return { main: protocol, suffix: "" };
 }
 
-export function TicketDrawer({ ticket, onChanged, viewer }: Props) {
+export function TicketDrawer({ ticket, onChanged, onClose, viewer }: Props) {
   const isAtendente = viewer?.role === "atendente";
   const isAdmin = viewer?.role === "administrador";
   const allowedStatuses = isAtendente
@@ -158,13 +159,19 @@ export function TicketDrawer({ ticket, onChanged, viewer }: Props) {
   if (!ticket) {
     return (
       <aside
+        className="thor-ticket-drawer is-empty"
         style={{
-          borderLeft: "1px solid var(--hairline)",
-          background: "var(--bg-elev)",
-          padding: 24,
-          minHeight: "calc(100vh - 84px)"
+          padding: 24
         }}
       >
+        <button
+          className="thor-ticket-close"
+          onClick={onClose}
+          title="Fechar painel"
+          type="button"
+        >
+          <X size={16} />
+        </button>
         <div
           className="foot-italic"
           style={{
@@ -186,22 +193,25 @@ export function TicketDrawer({ ticket, onChanged, viewer }: Props) {
 
   return (
     <aside
-      className="flex flex-col"
-      style={{
-        borderLeft: "1px solid var(--hairline)",
-        background: "var(--bg-elev)",
-        boxShadow: "var(--shadow-md)",
-        height: "calc(100vh - 84px)"
-      }}
+      className="thor-ticket-drawer"
     >
       {/* Head */}
       <div
+        className="thor-ticket-head"
         style={{
-          padding: "24px 26px 18px",
           borderBottom: "1px solid var(--hairline)"
         }}
       >
+        <button
+          className="thor-ticket-close"
+          onClick={onClose}
+          title="Fechar painel"
+          type="button"
+        >
+          <X size={16} />
+        </button>
         <div
+          className="thor-ticket-titlebar"
           style={{
             display: "flex",
             alignItems: "center",
@@ -213,8 +223,7 @@ export function TicketDrawer({ ticket, onChanged, viewer }: Props) {
             className="font-display tnum"
             style={{
               fontWeight: 500,
-              fontSize: "clamp(32px, 4vw, 44px)",
-              letterSpacing: "-0.02em",
+              fontSize: "clamp(26px, 2.4vw, 36px)",
               lineHeight: 1
             }}
           >
@@ -252,9 +261,9 @@ export function TicketDrawer({ ticket, onChanged, viewer }: Props) {
         </h2>
 
         <div
+          className="thor-ticket-meta-grid"
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
             gap: 14,
             paddingTop: 14,
             borderTop: "1px solid var(--hairline)"
@@ -349,10 +358,8 @@ export function TicketDrawer({ ticket, onChanged, viewer }: Props) {
 
       {/* Thread */}
       <div
+        className="thor-ticket-thread"
         style={{
-          padding: "22px 26px",
-          overflow: "auto",
-          flex: 1,
           display: "flex",
           flexDirection: "column",
           gap: 18

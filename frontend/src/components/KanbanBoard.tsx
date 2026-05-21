@@ -23,10 +23,10 @@ function pad2(n: number) {
 export function KanbanBoard({ columns, selectedId, onSelect }: Props) {
   return (
     <div
-      className="grid gap-4 overflow-x-auto pb-3 thor-stagger"
+      className="thor-kanban-board thor-stagger"
       style={{
         gridAutoFlow: "column",
-        gridAutoColumns: "minmax(280px, 1fr)"
+        gridAutoColumns: "minmax(260px, 1fr)"
       }}
     >
       {columns.map((column) => (

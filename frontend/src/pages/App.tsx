@@ -203,6 +203,7 @@ export default function App() {
   const [view, setView] = useState<"kanban" | "accesses" | "admin">("kanban");
   const [columns, setColumns] = useState<KanbanColumn[]>([]);
   const [selected, setSelected] = useState<Ticket | null>(null);
+  const [ticketPanelOpen, setTicketPanelOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
   const isAdmin = me?.role === "administrador";
@@ -410,15 +411,30 @@ export default function App() {
       ) : null}
 
       {view === "kanban" ? (
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_460px]">
-          <section className="p-6">
+        <div className={`thor-kanban-workspace ${ticketPanelOpen ? "detail-open" : ""}`}>
+          <section className="thor-kanban-panel">
             <KanbanBoard
               columns={columns}
-              onSelect={setSelected}
+              onSelect={(ticket) => {
+                setSelected(ticket);
+                setTicketPanelOpen(true);
+              }}
               selectedId={selected?.id}
             />
           </section>
-          <TicketDrawer onChanged={load} ticket={selected} viewer={me} />
+          <div
+            aria-hidden={!ticketPanelOpen}
+            className="thor-ticket-backdrop"
+            onClick={() => setTicketPanelOpen(false)}
+          />
+          <div className="thor-ticket-shell">
+            <TicketDrawer
+              onChanged={load}
+              onClose={() => setTicketPanelOpen(false)}
+              ticket={selected}
+              viewer={me}
+            />
+          </div>
         </div>
       ) : view === "accesses" ? (
         <AccessVaultPanel />
