@@ -5,6 +5,7 @@ import { KanbanBoard } from "../components/KanbanBoard";
 import { AdminPanel } from "../components/AdminPanel";
 import { AccessVaultPanel } from "../components/AccessVaultPanel";
 import { TicketDrawer } from "../components/TicketDrawer";
+import { PublicTicketPage } from "./PublicTicketPage";
 import { useTheme } from "../hooks/useTheme";
 import {
   changeOwnPassword,
@@ -197,12 +198,13 @@ function Login({ onLogged }: { onLogged: () => void }) {
   );
 }
 
-export default function App() {
+function PrivateApp() {
   const [authenticated, setAuthenticated] = useState(hasToken());
   const [me, setMe] = useState<AgentMe | null>(null);
   const [view, setView] = useState<"kanban" | "accesses" | "admin">("kanban");
   const [columns, setColumns] = useState<KanbanColumn[]>([]);
   const [selected, setSelected] = useState<Ticket | null>(null);
+  const [ticketPanelOpen, setTicketPanelOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
   const isAdmin = me?.role === "administrador";
@@ -410,15 +412,32 @@ export default function App() {
       ) : null}
 
       {view === "kanban" ? (
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_460px]">
-          <section className="p-6">
+        <div className={`thor-kanban-workspace ${ticketPanelOpen && selected ? "detail-open" : ""}`}>
+          <section className="thor-kanban-panel">
             <KanbanBoard
               columns={columns}
-              onSelect={setSelected}
+              onSelect={(ticket) => {
+                setSelected(ticket);
+                setTicketPanelOpen(true);
+              }}
               selectedId={selected?.id}
             />
           </section>
-          <TicketDrawer onChanged={load} ticket={selected} viewer={me} />
+          <div
+            aria-hidden={!ticketPanelOpen}
+            className="thor-ticket-backdrop"
+            onClick={() => setTicketPanelOpen(false)}
+          />
+          {selected ? (
+            <div className="thor-ticket-shell">
+              <TicketDrawer
+                onChanged={load}
+                onClose={() => setTicketPanelOpen(false)}
+                ticket={selected}
+                viewer={me}
+              />
+            </div>
+          ) : null}
         </div>
       ) : view === "accesses" ? (
         <AccessVaultPanel />
@@ -704,4 +723,13 @@ function PasswordChangeModal({
       </form>
     </div>
   );
+}
+
+export default function App() {
+  const publicTicketMatch = window.location.pathname.match(/^\/t\/([^/]+)$/);
+  if (publicTicketMatch) {
+    return <PublicTicketPage token={decodeURIComponent(publicTicketMatch[1])} />;
+  }
+
+  return <PrivateApp />;
 }

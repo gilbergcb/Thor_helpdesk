@@ -2,7 +2,6 @@ from typing import Any
 
 from pydantic import AliasChoices, BaseModel, Field, model_validator
 
-
 MEDIA_KEYS: tuple[tuple[str, str, str], ...] = (
     ("image", "image", "imageUrl"),
     ("audio", "audio", "audioUrl"),
@@ -19,9 +18,13 @@ class ZApiWebhookPayload(BaseModel):
     sender_phone: str | None = Field(
         default=None, validation_alias=AliasChoices("senderPhone", "sender", "from")
     )
-    sender_name: str | None = Field(default=None, validation_alias=AliasChoices("senderName", "pushName"))
+    sender_name: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("senderName", "pushName"),
+    )
     participant_phone: str | None = Field(default=None, validation_alias="participantPhone")
     participant_name: str | None = Field(default=None, validation_alias="participantName")
+    from_me: bool | None = Field(default=None, validation_alias="fromMe")
     text: str | dict[str, Any] | None = None
     message: str | None = None
     is_group: bool | None = Field(default=None, validation_alias="isGroup")
@@ -30,7 +33,11 @@ class ZApiWebhookPayload(BaseModel):
     media_mime_type: str | None = None
     caption: str | None = None
 
-    model_config = {"populate_by_name": True, "extra": "allow"}
+    # F-17 Phase 4.6: extra="ignore" — descarta campos desconhecidos do
+    # payload Z-API em vez de armazená-los no modelo. Reduz surface de
+    # injecao e bytes processados. flatten_common_payloads continua
+    # tolerante a estruturas variadas via lookup explicito.
+    model_config = {"populate_by_name": True, "extra": "ignore"}
 
     @model_validator(mode="before")
     @classmethod
@@ -48,7 +55,10 @@ class ZApiWebhookPayload(BaseModel):
                 if url:
                     out.setdefault("media_type", mtype)
                     out.setdefault("media_url", url)
-                    out.setdefault("media_mime_type", block.get("mimeType") or block.get("mimetype"))
+                    out.setdefault(
+                        "media_mime_type",
+                        block.get("mimeType") or block.get("mimetype"),
+                    )
                     caption = block.get("caption") or block.get("fileName")
                     if caption:
                         out.setdefault("caption", caption)

@@ -9,6 +9,7 @@ import type {
   ClientAccessCredentialReveal,
   EmployeeRole,
   KanbanColumn,
+  PublicTicket,
   Ticket,
   TicketDetail,
   TicketMessage,
@@ -95,6 +96,42 @@ export function changeStatus(ticketId: number, status: string) {
 
 export function replyTicket(ticketId: number, message: string) {
   return request<TicketMessage>(`/tickets/${ticketId}/reply`, {
+    method: "POST",
+    body: JSON.stringify({ message })
+  });
+}
+
+export function linkPendingMessage(pendingId: number, ticketId: number) {
+  return request<TicketMessage>(`/tickets/pending/${pendingId}/link/${ticketId}`, {
+    method: "POST"
+  });
+}
+
+export function createTicketFromPending(
+  pendingId: number,
+  payload: { title?: string | null; description?: string | null } = {}
+) {
+  return request<Ticket>(`/tickets/pending/${pendingId}/create-ticket`, {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
+export function ignorePendingMessage(pendingId: number) {
+  return fetch(`${API_URL}/tickets/pending/${pendingId}/ignore`, {
+    method: "POST",
+    headers: headers()
+  }).then(async (r) => {
+    if (!r.ok) throw new Error((await r.text()) || "Falha ao ignorar mensagem");
+  });
+}
+
+export function getPublicTicket(token: string) {
+  return request<PublicTicket>(`/public/tickets/${encodeURIComponent(token)}`);
+}
+
+export function sendPublicTicketMessage(token: string, message: string) {
+  return request<PublicTicket>(`/public/tickets/${encodeURIComponent(token)}/messages`, {
     method: "POST",
     body: JSON.stringify({ message })
   });
@@ -214,6 +251,7 @@ export function deleteClientEmployee(id: number) {
 export function createAgent(payload: {
   name: string;
   email: string;
+  phone?: string | null;
   password: string;
   role?: AgentRole;
   is_active?: boolean;
@@ -249,7 +287,14 @@ export function deleteWhatsAppGroup(id: number) {
 
 export function updateAgent(
   id: number,
-  payload: Partial<{ name: string; email: string; password: string; role: AgentRole; is_active: boolean }>
+  payload: Partial<{
+    name: string;
+    email: string;
+    phone: string | null;
+    password: string;
+    role: AgentRole;
+    is_active: boolean;
+  }>
 ) {
   return request<Agent>(`/admin/agents/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
 }

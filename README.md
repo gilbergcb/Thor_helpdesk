@@ -19,8 +19,10 @@ https://SEU_DOMINIO/api/v1/webhooks/zapi
 ```
 
 3. Quando uma mensagem do grupo começar com `#chamado`, o backend cria um ticket com protocolo automático.
-4. Mensagens posteriores do mesmo grupo entram no ticket aberto mais recente enquanto ele estiver em status operacional.
-5. O atendente pode assumir, mudar status e responder ao grupo pelo painel.
+4. O sistema responde automaticamente no grupo com o protocolo criado e a orientação de uso do comando `#ticket PROTOCOLO`.
+5. Mensagens com `#ticket PROTOCOLO` entram diretamente no ticket referenciado.
+6. Mensagens sem gatilho ficam pendentes no painel para o atendente vincular ao ticket atual, criar um novo ticket ou ignorar.
+7. O atendente pode assumir, mudar status e responder ao grupo pelo painel.
 
 ## Subir localmente
 
@@ -34,10 +36,16 @@ Acesse:
 - Frontend: `http://localhost:8080`
 - Backend OpenAPI: `http://localhost:8000/docs`
 
-Login inicial:
+Login inicial (criado pelo script `scripts/bootstrap_admin.py` no
+primeiro `docker compose up`, somente se ainda não houver admin no DB):
 
-- E-mail: `admin@helpdesk.com.br`
-- Senha: `admin123`
+- Defina antes de subir:
+  ```
+  INITIAL_ADMIN_EMAIL=seu.admin@exemplo.com
+  INITIAL_ADMIN_PASSWORD=alguma-senha-bem-forte-12-chars-min
+  ```
+- O agente é criado com `must_change_password=true`; troque na primeira sessão.
+- Em ambientes onde o admin já existe, o script é no-op.
 
 Grupo inicial para testes:
 
@@ -146,7 +154,7 @@ frontend/src/components componentes do painel
 db/init            seed inicial do PostgreSQL
 ```
 
-## Observações de produção
+## Observações de produção#
 
 - O webhook atual é público; adicione validação de token/assinatura se a Z-API do seu plano fornecer segredo por webhook.
 - Cadastros administrativos de clientes, grupos e atendentes ainda podem ser feitos por SQL ou por endpoints futuros.

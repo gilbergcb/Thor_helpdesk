@@ -3,10 +3,10 @@ from datetime import UTC, datetime
 from sqlalchemy import desc, func, select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
-from app.models.enums import TicketStatus
-from app.models.ticket import Ticket
-from app.models.whatsapp import WhatsAppUser
 from app.models.client import ClientEmployee
+from app.models.enums import TicketStatus
+from app.models.ticket import PendingTicketMessage, Ticket
+from app.models.whatsapp import WhatsAppUser
 
 OPEN_STATUSES = (
     TicketStatus.novo,
@@ -33,6 +33,22 @@ class TicketRepository:
             .where(Ticket.whatsapp_group_id == group_id, Ticket.status.in_(OPEN_STATUSES))
             .order_by(desc(Ticket.created_at))
             .limit(1)
+        )
+
+    def get_by_protocol(self, protocol: str) -> Ticket | None:
+        return self.db.scalar(select(Ticket).where(Ticket.protocol == protocol))
+
+    def pending_for_group(self, group_id: int) -> list[PendingTicketMessage]:
+        return list(
+            self.db.scalars(
+                select(PendingTicketMessage)
+                .where(
+                    PendingTicketMessage.whatsapp_group_id == group_id,
+                    PendingTicketMessage.status == "pending",
+                )
+                .options(joinedload(PendingTicketMessage.sender))
+                .order_by(PendingTicketMessage.created_at)
+            )
         )
 
     def list_kanban(self, agent_id_scope: int | None = None) -> list[Ticket]:

@@ -6,8 +6,9 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.security import decode_access_token
+from app.core.security import decode_access_token_full
 from app.models.enums import AgentRole
+from app.models.security import RevokedToken
 from app.models.support import Agent
 
 bearer_scheme = HTTPBearer()
@@ -17,10 +18,13 @@ def get_current_agent_allow_password_change(
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(bearer_scheme)],
     db: Annotated[Session, Depends(get_db)],
 ) -> Agent:
-    subject = decode_access_token(credentials.credentials)
-    if subject is None:
+    decoded = decode_access_token_full(credentials.credentials)
+    if decoded is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-    agent = db.get(Agent, int(subject))
+    # F-12 parcial: rejeita JWT cujo jti foi revogado via /auth/logout.
+    if decoded.jti is not None and db.get(RevokedToken, decoded.jti) is not None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token revoked")
+    agent = db.get(Agent, int(decoded.subject))
     if agent is None or not agent.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Inactive agent")
     return agent

@@ -1,0 +1,68 @@
+# F-20 Phase 5.3 — security gates em CI.
+# warn-only por 2 semanas; depois remover `continue-on-error: true`.
+name: security
+
+on:
+  pull_request:
+    branches: [main, security/**]
+  push:
+    branches: [main, security/**]
+  schedule:
+    # toda segunda 03:00 UTC pra pegar CVEs novas em deps congeladas
+    - cron: "0 3 * * 1"
+
+jobs:
+  python-deps:
+    name: pip-audit (backend)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pip-audit
+      - run: pip-audit --strict --skip-editable -r <(pip install --dry-run --report=- . 2>/dev/null || pip install . && pip freeze) || true
+      - name: audit pyproject
+        run: pip-audit --strict || true
+
+  node-deps:
+    name: npm audit (frontend)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm audit --omit=dev --audit-level=high
+
+  ruff:
+    name: ruff lint
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ruff
+      - run: ruff check app
+
+  gitleaks:
+    name: gitleaks (secret scan)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,11 +1,14 @@
-import { LogIn, Send, Trash2 } from "lucide-react";
+import { Link2, LogIn, Plus, Send, Trash2, X } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 
 import {
   assignTicket,
   changeStatus,
+  createTicketFromPending,
   deleteTicket,
   getTicket,
+  ignorePendingMessage,
+  linkPendingMessage,
   replyTicket
 } from "../services/api";
 import type { AgentMe, Ticket, TicketDetail, TicketStatus } from "../types/api";
@@ -13,6 +16,7 @@ import type { AgentMe, Ticket, TicketDetail, TicketStatus } from "../types/api";
 type Props = {
   ticket: Ticket | null;
   onChanged: () => void;
+  onClose?: () => void;
   viewer?: AgentMe | null;
 };
 
@@ -47,7 +51,7 @@ function splitProtocol(protocol: string): { main: string; suffix: string } {
   return { main: protocol, suffix: "" };
 }
 
-export function TicketDrawer({ ticket, onChanged, viewer }: Props) {
+export function TicketDrawer({ ticket, onChanged, onClose, viewer }: Props) {
   const isAtendente = viewer?.role === "atendente";
   const isAdmin = viewer?.role === "administrador";
   const allowedStatuses = isAtendente
@@ -116,16 +120,58 @@ export function TicketDrawer({ ticket, onChanged, viewer }: Props) {
     }
   }
 
+  async function handleLinkPending(pendingId: number) {
+    if (!ticket) return;
+    setBusy(true);
+    try {
+      await linkPendingMessage(pendingId, ticket.id);
+      onChanged();
+      setDetail(await getTicket(ticket.id));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleCreateFromPending(pendingId: number) {
+    if (!ticket) return;
+    setBusy(true);
+    try {
+      await createTicketFromPending(pendingId);
+      onChanged();
+      setDetail(await getTicket(ticket.id));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleIgnorePending(pendingId: number) {
+    if (!ticket) return;
+    setBusy(true);
+    try {
+      await ignorePendingMessage(pendingId);
+      onChanged();
+      setDetail(await getTicket(ticket.id));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (!ticket) {
     return (
       <aside
+        className="thor-ticket-drawer is-empty"
         style={{
-          borderLeft: "1px solid var(--hairline)",
-          background: "var(--bg-elev)",
-          padding: 24,
-          minHeight: "calc(100vh - 84px)"
+          padding: 24
         }}
       >
+        <button
+          className="thor-ticket-close"
+          onClick={onClose}
+          title="Fechar painel"
+          type="button"
+        >
+          <X size={16} />
+        </button>
         <div
           className="foot-italic"
           style={{
@@ -147,22 +193,25 @@ export function TicketDrawer({ ticket, onChanged, viewer }: Props) {
 
   return (
     <aside
-      className="flex flex-col"
-      style={{
-        borderLeft: "1px solid var(--hairline)",
-        background: "var(--bg-elev)",
-        boxShadow: "var(--shadow-md)",
-        height: "calc(100vh - 84px)"
-      }}
+      className="thor-ticket-drawer"
     >
       {/* Head */}
       <div
+        className="thor-ticket-head"
         style={{
-          padding: "24px 26px 18px",
           borderBottom: "1px solid var(--hairline)"
         }}
       >
+        <button
+          className="thor-ticket-close"
+          onClick={onClose}
+          title="Fechar painel"
+          type="button"
+        >
+          <X size={16} />
+        </button>
         <div
+          className="thor-ticket-titlebar"
           style={{
             display: "flex",
             alignItems: "center",
@@ -174,8 +223,7 @@ export function TicketDrawer({ ticket, onChanged, viewer }: Props) {
             className="font-display tnum"
             style={{
               fontWeight: 500,
-              fontSize: "clamp(32px, 4vw, 44px)",
-              letterSpacing: "-0.02em",
+              fontSize: "clamp(26px, 2.4vw, 36px)",
               lineHeight: 1
             }}
           >
@@ -213,9 +261,9 @@ export function TicketDrawer({ ticket, onChanged, viewer }: Props) {
         </h2>
 
         <div
+          className="thor-ticket-meta-grid"
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
             gap: 14,
             paddingTop: 14,
             borderTop: "1px solid var(--hairline)"
@@ -253,6 +301,20 @@ export function TicketDrawer({ ticket, onChanged, viewer }: Props) {
                 style={{ fontSize: 11, fontStyle: "italic", color: "var(--ink-mute)" }}
               >
                 {ticket.requester.employee_role.name}
+              </div>
+            ) : null}
+          </div>
+          <div>
+            <div className="smallcaps">Atendente</div>
+            <div style={{ fontSize: 13, color: "var(--ink)" }}>
+              {detail?.assigned_agent?.name ?? ticket.assigned_agent?.name ?? "—"}
+            </div>
+            {(detail?.assigned_agent?.phone ?? ticket.assigned_agent?.phone) ? (
+              <div
+                className="font-display"
+                style={{ fontSize: 11, fontStyle: "italic", color: "var(--ink-mute)" }}
+              >
+                {detail?.assigned_agent?.phone ?? ticket.assigned_agent?.phone}
               </div>
             ) : null}
           </div>
@@ -310,10 +372,8 @@ export function TicketDrawer({ ticket, onChanged, viewer }: Props) {
 
       {/* Thread */}
       <div
+        className="thor-ticket-thread"
         style={{
-          padding: "22px 26px",
-          overflow: "auto",
-          flex: 1,
           display: "flex",
           flexDirection: "column",
           gap: 18
@@ -475,6 +535,61 @@ export function TicketDrawer({ ticket, onChanged, viewer }: Props) {
           </div>
         ) : null}
       </div>
+
+      {(detail?.pending_messages ?? []).length > 0 ? (
+        <section className="thor-pending-thread">
+          <div className="thor-pending-head">
+            <div>
+              <span className="smallcaps">Mensagens pendentes do grupo</span>
+              <strong>{detail?.pending_messages.length ?? 0}</strong>
+            </div>
+            <p className="foot-italic">
+              Vincule ao ticket atual, crie um novo chamado ou ignore.
+            </p>
+          </div>
+          <div className="thor-pending-list">
+            {(detail?.pending_messages ?? []).map((pending) => (
+              <article className="thor-pending-card" key={pending.id}>
+                <div className="thor-pending-meta">
+                  <span>{pending.sender?.name ?? pending.sender?.phone ?? "Cliente"}</span>
+                  <time>{new Date(pending.created_at).toLocaleString("pt-BR")}</time>
+                </div>
+                <p>{pending.content}</p>
+                {pending.reason ? <small>{pending.reason}</small> : null}
+                <div className="thor-pending-actions">
+                  <button
+                    className="thor-btn sm"
+                    disabled={busy}
+                    onClick={() => handleLinkPending(pending.id)}
+                    title="Vincular ao ticket selecionado"
+                    type="button"
+                  >
+                    <Link2 size={14} /> Vincular aqui
+                  </button>
+                  <button
+                    className="thor-btn ghost sm"
+                    disabled={busy}
+                    onClick={() => handleCreateFromPending(pending.id)}
+                    title="Criar novo ticket a partir desta mensagem"
+                    type="button"
+                  >
+                    <Plus size={14} /> Novo ticket
+                  </button>
+                  <button
+                    className="thor-btn danger-ghost sm"
+                    disabled={busy}
+                    onClick={() => handleIgnorePending(pending.id)}
+                    title="Ignorar mensagem pendente"
+                    type="button"
+                  >
+                    <X size={14} /> Ignorar
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {/* Composer */}
       <form

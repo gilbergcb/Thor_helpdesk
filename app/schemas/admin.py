@@ -1,6 +1,25 @@
-from pydantic import BaseModel, EmailStr
+from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 from app.models.enums import AgentRole
+
+
+class AdminAuditLogRead(BaseModel):
+    """F-18: row do admin_audit_log."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    actor_agent_id: int | None
+    actor_email: str | None
+    actor_role: str | None
+    action: str
+    target_type: str
+    target_id: str | None
+    payload_hash: str | None
+    source_ip: str | None
+    created_at: datetime
 
 
 class ClientCreate(BaseModel):
@@ -64,6 +83,7 @@ class ClientEmployeeRead(ClientEmployeeCreate):
 class AgentCreate(BaseModel):
     name: str
     email: EmailStr
+    phone: str | None = None
     password: str
     role: AgentRole = AgentRole.atendente
     is_active: bool = True
@@ -73,6 +93,7 @@ class AgentRead(BaseModel):
     id: int
     name: str
     email: EmailStr
+    phone: str | None = None
     role: AgentRole
     is_active: bool
     must_change_password: bool
@@ -97,6 +118,7 @@ class WhatsAppGroupUpdate(BaseModel):
 class AgentUpdate(BaseModel):
     name: str | None = None
     email: EmailStr | None = None
+    phone: str | None = None
     password: str | None = None
     role: AgentRole | None = None
     is_active: bool | None = None
