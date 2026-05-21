@@ -627,6 +627,321 @@ select {
   scrollbar-width: thin;
 }
 
+/* ---------- Home dashboard ---------- */
+.thor-home-page {
+  padding: clamp(16px, 2vw, 32px);
+}
+
+.thor-home-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 22px;
+  padding-bottom: 18px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.thor-home-hero h1 {
+  margin: 6px 0 4px;
+  font-size: clamp(32px, 4vw, 54px);
+  font-weight: 500;
+  line-height: 0.98;
+}
+
+.thor-home-hero p {
+  max-width: 720px;
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 15px;
+}
+
+.thor-home-hero-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.thor-home-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.thor-home-metric {
+  display: grid;
+  gap: 9px;
+  min-height: 138px;
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.thor-home-metric > div {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.thor-home-metric > div > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--hairline);
+  background: var(--bg);
+  color: var(--accent);
+  flex: 0 0 auto;
+}
+
+.thor-home-metric strong {
+  font-size: clamp(30px, 3vw, 42px);
+  font-weight: 500;
+  line-height: 1;
+}
+
+.thor-home-metric em {
+  overflow: hidden;
+  color: var(--ink-mute);
+  font-family: "Fraunces", serif;
+  font-size: 12px;
+  font-style: italic;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.thor-home-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.9fr) minmax(260px, 0.75fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.thor-home-panel {
+  min-width: 0;
+  border: 1px solid var(--hairline);
+  background: var(--bg-elev);
+  box-shadow: var(--shadow-sm);
+}
+
+.thor-home-queue {
+  grid-row: span 3;
+}
+
+.thor-home-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 58px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.thor-home-panel-head > div {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.thor-home-panel-head svg {
+  flex: 0 0 auto;
+  color: var(--accent);
+}
+
+.thor-home-panel-head h2 {
+  margin: 0;
+  overflow: hidden;
+  font-size: 20px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.thor-home-ticket-list {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.thor-home-ticket {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 14px;
+  width: 100%;
+  min-height: 112px;
+  padding: 13px 14px;
+  border: 1px solid var(--hairline);
+  background: var(--bg);
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.16s, border-color 0.16s, transform 0.16s;
+}
+
+.thor-home-ticket:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent-soft) 28%, var(--bg));
+  transform: translateY(-1px);
+}
+
+.thor-home-ticket .thor-tag {
+  justify-self: start;
+}
+
+.thor-home-ticket strong {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.thor-home-ticket span:not(.thor-tag):not(.dot),
+.thor-home-ticket small {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  color: var(--ink-mute);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.thor-home-status-list,
+.thor-home-rank-list {
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px 16px;
+}
+
+.thor-home-status-row,
+.thor-home-rank-row {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.thor-home-status-row > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.thor-home-status-row > span,
+.thor-home-rank-row > i {
+  display: block;
+  height: 5px;
+  overflow: hidden;
+  background: var(--bg-sunk);
+}
+
+.thor-home-status-row > span::before,
+.thor-home-rank-row > i::before {
+  content: "";
+  display: block;
+  width: var(--bar);
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--amber));
+}
+
+.thor-home-resolution {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-top: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--bg-sunk) 25%, var(--bg-elev));
+}
+
+.thor-home-resolution strong {
+  font-size: 24px;
+  font-weight: 500;
+}
+
+.thor-home-rank-row {
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.thor-home-rank-row span {
+  color: var(--ink-mute);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.thor-home-rank-row strong {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.thor-home-rank-row em {
+  color: var(--ink-mute);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.thor-home-rank-row i {
+  grid-column: 2 / -1;
+}
+
+.thor-home-radar {
+  grid-column: span 2;
+}
+
+.thor-home-radar-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  padding: 14px 16px 16px;
+}
+
+.thor-home-radar-item {
+  display: grid;
+  gap: 6px;
+  min-height: 92px;
+  padding: 12px;
+  border: 1px solid var(--hairline);
+  background: var(--bg);
+}
+
+.thor-home-radar-item strong {
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.thor-home-radar-item.ok strong {
+  color: var(--ok);
+}
+
+.thor-home-radar-item.warn strong {
+  color: var(--warn);
+}
+
+.thor-home-radar-item.danger strong {
+  color: var(--danger);
+}
+
+.thor-home-empty {
+  padding: 22px 16px;
+  color: var(--ink-mute);
+  font-family: "Fraunces", serif;
+  font-size: 13px;
+  font-style: italic;
+  text-align: center;
+}
+
 .thor-ticket-shell {
   position: fixed;
   top: 0;
@@ -1640,6 +1955,18 @@ select {
   .thor-admin-form-panel {
     max-width: none;
   }
+
+  .thor-home-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .thor-home-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 0.85fr);
+  }
+
+  .thor-home-radar {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 1279px) {
@@ -1725,6 +2052,33 @@ select {
   .thor-admin-form-footer {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .thor-home-page {
+    padding: 18px;
+  }
+
+  .thor-home-hero {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .thor-home-hero-actions {
+    justify-content: flex-start;
+  }
+
+  .thor-home-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .thor-home-queue,
+  .thor-home-radar {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .thor-home-radar-grid {
+    grid-template-columns: 1fr;
   }
 
   .thor-data-table-scroll {
@@ -1838,6 +2192,24 @@ select {
 
   .thor-data-card-actions {
     justify-content: stretch;
+  }
+
+  .thor-home-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .thor-home-hero-actions .thor-btn {
+    width: 100%;
+  }
+
+  .thor-home-panel-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .thor-home-panel-head .thor-btn-ghost {
+    width: 100%;
+    justify-content: center;
   }
 
   .thor-data-card-actions .thor-admin-token-input {

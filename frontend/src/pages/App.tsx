@@ -1,9 +1,10 @@
-import { FileBarChart, KeyRound, LogOut, Moon, RefreshCcw, Sun } from "lucide-react";
+import { FileBarChart, KeyRound, LayoutDashboard, LogOut, Moon, RefreshCcw, Sun } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 
 import { KanbanBoard } from "../components/KanbanBoard";
 import { AdminPanel } from "../components/AdminPanel";
 import { AccessVaultPanel } from "../components/AccessVaultPanel";
+import { HomeDashboard } from "../components/HomeDashboard";
 import { ReportsPanel } from "../components/ReportsPanel";
 import { TicketDrawer } from "../components/TicketDrawer";
 import { PublicTicketPage } from "./PublicTicketPage";
@@ -202,7 +203,7 @@ function Login({ onLogged }: { onLogged: () => void }) {
 function PrivateApp() {
   const [authenticated, setAuthenticated] = useState(hasToken());
   const [me, setMe] = useState<AgentMe | null>(null);
-  const [view, setView] = useState<"kanban" | "accesses" | "admin" | "reports">("kanban");
+  const [view, setView] = useState<"home" | "kanban" | "accesses" | "admin" | "reports">("home");
   const [columns, setColumns] = useState<KanbanColumn[]>([]);
   const [selected, setSelected] = useState<Ticket | null>(null);
   const [ticketPanelOpen, setTicketPanelOpen] = useState(false);
@@ -297,6 +298,30 @@ function PrivateApp() {
         </div>
 
         <nav className="thor-app-nav">
+          <button
+            className="font-display"
+            onClick={() => setView("home")}
+            style={{
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              padding: "8px 14px",
+              fontSize: 14,
+              color: view === "home" ? "var(--ink)" : "var(--ink-soft)",
+              borderBottom:
+                view === "home"
+                  ? "1px solid var(--accent)"
+                  : "1px solid transparent",
+              transition: "color .2s, border-color .2s",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6
+            }}
+            type="button"
+          >
+            <LayoutDashboard size={14} />
+            Home
+          </button>
           <button
             className="font-display"
             onClick={() => setView("kanban")}
@@ -436,7 +461,22 @@ function PrivateApp() {
         />
       ) : null}
 
-      {view === "kanban" ? (
+      {view === "home" ? (
+        <HomeDashboard
+          columns={columns}
+          loading={loading}
+          me={me}
+          onNavigate={setView}
+          onOpenTicket={(ticket) => {
+            setSelected(ticket);
+            setTicketPanelOpen(true);
+            setView("kanban");
+          }}
+          onRefresh={() => {
+            load().catch(console.error);
+          }}
+        />
+      ) : view === "kanban" ? (
         <div className={`thor-kanban-workspace ${ticketPanelOpen && selected ? "detail-open" : ""}`}>
           <section className="thor-kanban-panel">
             <KanbanBoard
