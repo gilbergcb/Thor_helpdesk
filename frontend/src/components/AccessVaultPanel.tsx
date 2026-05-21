@@ -178,7 +178,7 @@ export function AccessVaultPanel() {
                   <td style={cellStyle} data-label="Cliente">{access.client.name}</td>
                   <td style={cellStyle} data-label="Acesso">{access.title}</td>
                   <td style={cellStyle} data-label="URL / Host">
-                    <code>{access.access_url || "—"}</code>
+                    <code>{maskHost(access.access_url)}</code>
                   </td>
                   <td style={cellStyle} data-label="Usuário">
                     <code>{access.username || "—"}</code>
@@ -247,7 +247,7 @@ export function AccessVaultPanel() {
                 <div className="thor-access-card-grid">
                   <SecretLine label="Cliente" value={access.client.name} plain />
                   <SecretLine label="Acesso" value={access.title} plain />
-                  <SecretLine label="URL / Host" value={access.access_url} />
+                  <SecretLine label="URL / Host" value={maskHost(access.access_url)} />
                   <SecretLine label="Usuário" value={access.username} />
                 </div>
                 <div className="thor-access-card-actions">
@@ -291,6 +291,11 @@ export function AccessVaultPanel() {
 
     </section>
   );
+}
+
+function maskHost(value: string | null): string {
+  if (!value) return "—";
+  return "•".repeat(Math.min(Math.max(value.length, 6), 16));
 }
 
 const cellStyle = {
