@@ -29,7 +29,11 @@ def _client_key(request: Request) -> str:
     return get_remote_address(request)
 
 
-limiter = Limiter(key_func=_client_key, default_limits=[], headers_enabled=True)
+# headers_enabled=False: o slowapi exige `response: Response` no endpoint
+# para injetar X-RateLimit-*. Endpoints que retornam pydantic model (como
+# /auth/login -> TokenResponse) crasham com 500 se headers_enabled=True.
+# Os limites continuam aplicados; só não vai header informativo.
+limiter = Limiter(key_func=_client_key, default_limits=[], headers_enabled=False)
 
 
 def ratelimit_active() -> bool:
