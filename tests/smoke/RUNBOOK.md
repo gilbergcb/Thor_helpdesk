@@ -19,34 +19,54 @@ Todas as mudanças comportamentais entram atrás de uma env `SECURITY_*` com def
 
 ```bash
 ssh finanpersona-vps
-cd /opt/helpdesk
+cd /home/finadmin/winthor-helpdesk
 # editar .env, trocar a flag pra off ou audit
-sudo nano .env
-docker compose restart api
+nano .env
+docker compose restart backend
 # validar
-curl -s https://helpdesk.thor.<dominio>/api/v1/health | jq .
+curl -s http://127.0.0.1:8010/api/v1/health | jq .
 ```
 
-## Rollback completo (git revert)
+## Rollback completo (rebuild da imagem antes da fase)
+
+VPS **não é git repo** — código é sincronizado via rsync a partir da máquina do dev.
+Para reverter, fazer rsync do estado anterior e rebuildar:
 
 ```bash
-cd /opt/helpdesk
-git log --oneline -10
-git revert <SHA_DA_FASE>
-docker compose build api && docker compose up -d api
+# na maquina do dev
+git checkout <SHA_ANTES_DA_FASE>
+rsync -av --delete --exclude='.env' --exclude='media/' --exclude='backups/' \
+  ./ finanpersona-vps:/home/finadmin/winthor-helpdesk/
+# no VPS
+ssh finanpersona-vps "cd /home/finadmin/winthor-helpdesk && docker compose build backend frontend && docker compose up -d"
 ```
 
 ## Snapshots (criados na Fase 0)
 
-- DB: `/opt/helpdesk/backups/pre-security-batch-1/db.sql.gz`
-- .env: `/opt/helpdesk/backups/pre-security-batch-1/env.age` (cifrado com age, chave do Gilberg)
-- Compose: commit SHA no git anotado em `phase-0-snapshot.txt`
+Localização real no VPS: `/home/finadmin/backups/helpdesk/pre-security-batch-1/`
+
+- `db.sql.gz` — pg_dump do Postgres (user=helpdesk)
+- `.env.plain` — copia do .env (chmod 600). Cifrar com age e shred do .plain
+- `docker-compose.yml`, `Dockerfile.backend`, `Dockerfile.frontend` — snapshot da config
+- `media.tar.gz` — tarball do volume `winthor-helpdesk_media_data`
+- `phase-0-snapshot.txt` — estado de `docker compose ps`, imagens e volumes
 
 ## Restore de DB (último recurso)
 
 ```bash
-docker compose stop api
-gunzip -c /opt/helpdesk/backups/pre-security-batch-1/db.sql.gz | \
-  docker compose exec -T db psql -U postgres helpdesk
-docker compose start api
+ssh finanpersona-vps
+cd /home/finadmin/winthor-helpdesk
+docker compose stop backend
+gunzip -c /home/finadmin/backups/helpdesk/pre-security-batch-1/db.sql.gz | \
+  docker compose exec -T db psql -U helpdesk helpdesk
+docker compose start backend
+```
+
+## Restore do volume de mídia
+
+```bash
+ssh finanpersona-vps
+docker run --rm -v winthor-helpdesk_media_data:/data \
+  -v /home/finadmin/backups/helpdesk/pre-security-batch-1:/backup alpine \
+  sh -c "cd /data && rm -rf ./* && tar xzf /backup/media.tar.gz"
 ```
