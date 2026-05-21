@@ -115,6 +115,7 @@ class TicketRead(BaseModel):
     status: TicketStatus
     priority: TicketPriority
     opened_at: datetime
+    closed_at: datetime | None = None
     client: ClientRead
     whatsapp_group: WhatsAppGroupRead
     requester: RequesterRead | None = None

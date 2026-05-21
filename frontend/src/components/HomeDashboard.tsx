@@ -90,6 +90,11 @@ function formatHours(value: number | null | undefined): string {
   return `${value.toFixed(1).replace(".", ",")}h`;
 }
 
+function isToday(value: string | null | undefined): boolean {
+  if (!value) return false;
+  return dateOnly(new Date(value)) === dateOnly(new Date());
+}
+
 function personName(ticket: Ticket): string {
   return ticket.requester?.name ?? ticket.requester?.phone ?? "solicitante não identificado";
 }
@@ -145,7 +150,17 @@ export function HomeDashboard({
 
   const waiting = tickets.filter((ticket) => ticket.status === "aguardando_cliente").length;
   const unassigned = openTickets.filter((ticket) => !ticket.assigned_agent).length;
-  const mine = openTickets.filter((ticket) => ticket.assigned_agent?.id === me?.id).length;
+  const completedToday = tickets.filter(
+    (ticket) =>
+      isToday(ticket.closed_at) &&
+      (ticket.status === "resolvido" || ticket.status === "fechado")
+  ).length;
+  const myCompletedToday = tickets.filter(
+    (ticket) =>
+      ticket.assigned_agent?.id === me?.id &&
+      isToday(ticket.closed_at) &&
+      (ticket.status === "resolvido" || ticket.status === "fechado")
+  ).length;
   const hotTickets = openTickets.filter(
     (ticket) => ticket.priority === "alta" || ticket.priority === "critica"
   ).length;
@@ -172,9 +187,6 @@ export function HomeDashboard({
     .map(([status, total]) => ({ status: status as TicketStatus, total }))
     .sort((a, b) => b.total - a.total);
   const maxStatus = Math.max(1, ...statusEntries.map((entry) => entry.total));
-  const resolvedRate = report?.summary.total
-    ? Math.round(((report.summary.resolved_total + report.summary.closed_total) / report.summary.total) * 100)
-    : 0;
   const insight = buildInsight(openTickets.length, unassigned, waiting, hotTickets);
 
   useEffect(() => {
@@ -211,9 +223,9 @@ export function HomeDashboard({
 
       <div className="thor-home-metrics">
         <MetricCard icon={<Activity size={18} />} label="Fila aberta" note="agora" value={openTickets.length} />
-        <MetricCard icon={<Headphones size={18} />} label="Meus atendimentos" note={me?.name ?? "conta"} value={mine} />
+        <MetricCard icon={<Headphones size={18} />} label="Meus concluídos" note="hoje" value={myCompletedToday} />
         <MetricCard icon={<Clock3 size={18} />} label="Mais antigo" note={oldestTicket?.protocol ?? "sem pendência"} value={oldestTicket ? formatAge(oldestTicket.opened_at) : "0"} />
-        <MetricCard icon={<ShieldCheck size={18} />} label="Resolução 30d" note={`${report?.summary.total ?? 0} no período`} value={`${resolvedRate}%`} />
+        <MetricCard icon={<ShieldCheck size={18} />} label="Finalizados" note="hoje" value={completedToday} />
       </div>
 
       <div className="thor-home-layout">

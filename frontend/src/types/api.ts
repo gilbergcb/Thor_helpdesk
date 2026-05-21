@@ -16,6 +16,7 @@ export type Ticket = {
   status: TicketStatus;
   priority: TicketPriority;
   opened_at: string;
+  closed_at: string | null;
   client: { id: number; name: string };
   whatsapp_group: { id: number; group_id: string; name: string };
   requester:
