@@ -123,7 +123,7 @@ async def assign(
 
 
 @router.patch("/{ticket_id}/status", response_model=TicketRead)
-def change_status(
+async def change_status(
     request: Request,
     ticket_id: int,
     payload: UpdateTicketStatusRequest,
@@ -133,7 +133,7 @@ def change_status(
     pre = db.get(Ticket, ticket_id)
     if pre is not None:
         check_ticket_access(agent, pre, action="change_status", request=request)
-    ticket = TicketService(db).change_status(ticket_id, payload.status, agent)
+    ticket = await TicketService(db).change_status(ticket_id, payload.status, agent)
     if ticket is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket not found")
     return ticket
