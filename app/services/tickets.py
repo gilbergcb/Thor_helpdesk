@@ -87,7 +87,9 @@ class TicketService:
         ticket.status = status
         if status in (TicketStatus.resolvido, TicketStatus.fechado):
             ticket.closed_at = datetime.now(UTC)
-        if status == TicketStatus.fechado:
+        # Revoga link publico em qualquer transicao para um estado terminal —
+        # resolvido (atendente julga concluido) ou fechado (cliente confirmou).
+        if status in (TicketStatus.resolvido, TicketStatus.fechado):
             PublicTicketLinkService(self.db).revoke_for_ticket(ticket)
         self.db.add(
             TicketHistory(

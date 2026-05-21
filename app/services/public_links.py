@@ -44,7 +44,9 @@ class PublicTicketLinkService:
             return None
         if link.expires_at is not None and link.expires_at <= now:
             return None
-        if link.ticket.status == TicketStatus.fechado:
+        # Ticket resolvido ou fechado encerra o portal — atendente já deu
+        # a resposta final; cliente nao precisa mais interagir.
+        if link.ticket.status in (TicketStatus.resolvido, TicketStatus.fechado):
             return None
         link.last_access_at = now
         self.db.commit()
