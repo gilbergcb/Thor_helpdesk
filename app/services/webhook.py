@@ -14,6 +14,7 @@ from app.services.public_links import PublicTicketLinkService
 from app.services.zapi import ZApiClient
 
 TRIGGER = "#chamado"
+TRIGGER_RE = re.compile(r"^\s*(?:#\s*chamado\b\s*[:\-–—]?\s*)+", re.IGNORECASE)
 TICKET_REFERENCE_RE = re.compile(r"^#ticket\s+([A-Z0-9.-]+)\b", re.IGNORECASE)
 logger = logging.getLogger(__name__)
 
@@ -44,7 +45,8 @@ class WebhookService:
         media_url = raw_media_url.split("?")[0] if raw_media_url else None
         media_type = payload.media_type
 
-        is_new_ticket = content.lower().startswith(TRIGGER)
+        ticket_description = self._new_ticket_description(content)
+        is_new_ticket = ticket_description is not None
         referenced_protocol = self._referenced_protocol(content)
 
         if payload.from_me and not (is_new_ticket or referenced_protocol):
@@ -61,7 +63,7 @@ class WebhookService:
         ticket = None
 
         if is_new_ticket:
-            description = content[len(TRIGGER):].strip() or content
+            description = ticket_description or "Chamado via WhatsApp"
             title = description.splitlines()[0][:180] or "Chamado via WhatsApp"
             ticket = Ticket(
                 protocol=self.tickets.next_protocol(),
@@ -150,6 +152,12 @@ class WebhookService:
     def _referenced_protocol(content: str) -> str | None:
         match = TICKET_REFERENCE_RE.match(content.strip())
         return match.group(1).upper() if match else None
+
+    @staticmethod
+    def _new_ticket_description(content: str) -> str | None:
+        if not TRIGGER_RE.match(content):
+            return None
+        return TRIGGER_RE.sub("", content, count=1).strip()
 
     def _save_pending_message(
         self,
