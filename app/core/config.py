@@ -1,7 +1,11 @@
+import logging
 from functools import lru_cache
 
-from pydantic import AnyHttpUrl, Field
+from pydantic import AnyHttpUrl, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_logger = logging.getLogger("security.config")
+_WEAK_JWT_SECRETS = {"change-me-in-production", "", "secret", "changeme"}
 
 
 class Settings(BaseSettings):
@@ -47,6 +51,25 @@ class Settings(BaseSettings):
     )
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+
+    @model_validator(mode="after")
+    def _assert_jwt_secret_strength(self) -> "Settings":
+        """F-13: rejeita boot em produção com JWT secret fraco/default.
+        Em dev/staging, só WARNING."""
+        secret = (self.jwt_secret_key or "").strip()
+        is_weak = secret in _WEAK_JWT_SECRETS or len(secret) < 32
+        if not is_weak:
+            return self
+        env = (self.environment or "").lower()
+        msg = (
+            f"JWT_SECRET_KEY fraco ou default detectado "
+            f"(len={len(secret)}, env={env!r}). "
+            "Gere com `python -c 'import secrets; print(secrets.token_urlsafe(64))'`."
+        )
+        if env == "production":
+            raise ValueError(msg)
+        _logger.warning("F-13 startup assert: %s (somente WARNING fora de production)", msg)
+        return self
 
 
 @lru_cache

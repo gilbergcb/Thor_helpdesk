@@ -3,8 +3,9 @@ import hashlib
 import secrets
 from datetime import UTC, datetime, timedelta
 
+import jwt
 from cryptography.fernet import Fernet
-from jose import JWTError, jwt
+from jwt import PyJWTError
 from passlib.context import CryptContext
 
 from app.core.config import get_settings
@@ -62,7 +63,7 @@ def decode_access_token(token: str) -> str | None:
     settings = get_settings()
     try:
         payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
-    except JWTError:
+    except PyJWTError:
         return None
     subject = payload.get("sub")
     return str(subject) if subject else None
