@@ -83,6 +83,9 @@ EXTENSION_BY_MIME: dict[str, str] = {
     "audio/mp4": ".m4a",
     "video/mp4": ".mp4",
     "application/pdf": ".pdf",
+    "text/plain": ".txt",
+    "text/csv": ".csv",
+    "application/json": ".json",
 }
 
 
@@ -133,6 +136,138 @@ def download_to_storage(url: str, mime_type: str | None = None) -> str | None:
         return None
 
     return str(relative).replace("\\", "/")
+
+
+# ----------------------------------------------------------------------------
+# Upload via portal público (Fase A — anexos do cliente final).
+# ----------------------------------------------------------------------------
+
+# Whitelist de MIMEs aceitos via portal. Bloqueia explicitamente:
+#   - image/svg+xml (XSS por SVG inline)
+#   - text/html (XSS)
+#   - application/zip e variantes (drop de malware)
+#   - executáveis
+ALLOWED_UPLOAD_MIMES: frozenset[str] = frozenset(
+    {
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "image/gif",
+        "application/pdf",
+        "text/plain",
+        "text/csv",
+        "application/json",
+    }
+)
+
+
+def _detect_mime_from_bytes(head: bytes, declared: str | None) -> str | None:
+    """Detecta MIME a partir dos primeiros bytes.
+    Usa python-magic se disponível; fallback em magic-bytes manuais.
+    Retorna o MIME confiável ou None."""
+    try:
+        import magic  # type: ignore[import-not-found]
+    except ImportError:
+        magic = None
+
+    if magic is not None:
+        try:
+            detected = magic.from_buffer(head, mime=True)
+            if detected:
+                return detected.split(";")[0].strip().lower()
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("magic.from_buffer falhou: %s — usando fallback", exc)
+
+    # Fallback simples por magic bytes (cobre os MIMEs da whitelist).
+    if head.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg"
+    if head.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png"
+    if head[:4] == b"RIFF" and head[8:12] == b"WEBP":
+        return "image/webp"
+    if head[:6] in (b"GIF87a", b"GIF89a"):
+        return "image/gif"
+    if head[:4] == b"%PDF":
+        return "application/pdf"
+    if head[:1] == b"{":
+        # heurística JSON — não decisiva, deixa o declared decidir se for compatível
+        if declared == "application/json":
+            return "application/json"
+    # texto plano: heurística pobre, mas se declared é text/* e bytes são printáveis...
+    if declared and declared.startswith("text/"):
+        try:
+            head.decode("utf-8")
+            return declared
+        except UnicodeDecodeError:
+            return None
+    return None
+
+
+class UploadValidationError(Exception):
+    """Levantada quando o arquivo recusou a validação MIME/size."""
+
+
+def save_uploaded_file(
+    raw: bytes,
+    declared_mime: str | None,
+    *,
+    max_bytes: int,
+) -> tuple[str, str, int]:
+    """Persiste bytes em /app/media/YYYY/MM/<uuid>.<ext>.
+
+    Retorna (storage_key, mime_type_confirmado, byte_size).
+
+    Levanta UploadValidationError se:
+      - tamanho > max_bytes
+      - MIME detectado não está na whitelist
+      - MIME detectado diverge significativamente do declared (anti-polyglot)
+    """
+    byte_size = len(raw)
+    if byte_size > max_bytes:
+        raise UploadValidationError(
+            f"arquivo excede o tamanho maximo de {max_bytes // (1024 * 1024)} MB"
+        )
+    if byte_size == 0:
+        raise UploadValidationError("arquivo vazio")
+
+    detected = _detect_mime_from_bytes(raw[:4096], declared_mime)
+    if detected is None:
+        raise UploadValidationError("tipo de arquivo nao reconhecido")
+    if detected not in ALLOWED_UPLOAD_MIMES:
+        raise UploadValidationError(f"tipo de arquivo nao permitido: {detected}")
+    # anti-polyglot: se cliente declarou imagem e detectamos PDF (ou vice-versa), recusa.
+    if declared_mime:
+        d = declared_mime.split(";")[0].strip().lower()
+        # permite mismatch só dentro do mesmo "grupo" (image/* ↔ image/*).
+        if d != detected:
+            d_group = d.split("/", 1)[0]
+            det_group = detected.split("/", 1)[0]
+            if d_group != det_group:
+                raise UploadValidationError(
+                    f"tipo declarado ({d}) diverge do conteudo ({detected})"
+                )
+
+    settings = get_settings()
+    base_dir = Path(settings.media_storage_dir)
+    today = datetime.utcnow()
+    sub = Path(today.strftime("%Y/%m"))
+    target_dir = base_dir / sub
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    ext = EXTENSION_BY_MIME.get(detected, mimetypes.guess_extension(detected) or ".bin")
+    filename = f"{uuid.uuid4().hex}{ext}"
+    relative = sub / filename
+    absolute = base_dir / relative
+
+    try:
+        with absolute.open("wb") as handle:
+            handle.write(raw)
+    except OSError as exc:
+        logger.error("falha ao gravar upload %s: %s", absolute, exc)
+        raise UploadValidationError("erro interno ao salvar arquivo") from exc
+
+    storage_key = str(relative).replace("\\", "/")
+    return storage_key, detected, byte_size
 
 
 def resolve_storage_path(storage_key: str) -> Path | None:

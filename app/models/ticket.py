@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Index, String, Text
+from sqlalchemy import BigInteger, DateTime, Enum, ForeignKey, Index, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -90,6 +90,37 @@ class TicketMessage(TimestampMixin, Base):
     ticket = relationship("Ticket", back_populates="messages")
     sender = relationship("WhatsAppUser", back_populates="messages")
     agent = relationship("Agent", back_populates="sent_messages")
+    attachments = relationship(
+        "TicketMessageAttachment",
+        back_populates="message",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        order_by="TicketMessageAttachment.id",
+    )
+
+
+class TicketMessageAttachment(Base):
+    """Anexos de uma TicketMessage. Suporta múltiplos arquivos por mensagem
+    (caso típico: upload via portal público com 1 a 3 prints + 1 PDF)."""
+
+    __tablename__ = "ticket_message_attachments"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    ticket_message_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("ticket_messages.id", ondelete="CASCADE"), nullable=False
+    )
+    storage_key: Mapped[str] = mapped_column(String(255), nullable=False)
+    mime_type: Mapped[str] = mapped_column(String(120), nullable=False)
+    byte_size: Mapped[int] = mapped_column(Integer, nullable=False)
+    original_filename: Mapped[str | None] = mapped_column(String(255))
+    # 'public_portal' | 'webhook_zapi' | 'agent_reply' — vento p/ classificar
+    # origem em audits e métricas.
+    source: Mapped[str] = mapped_column(String(24), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    message = relationship("TicketMessage", back_populates="attachments")
 
 
 class PendingTicketMessage(TimestampMixin, Base):
