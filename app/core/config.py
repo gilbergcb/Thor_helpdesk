@@ -47,6 +47,8 @@ class Settings(BaseSettings):
     security_tenant_isolation: str = "audit"
     # F-09: aceita "on"/"off" (mapeados internamente para enforce/off).
     security_ratelimit_login: str = "on"
+    # Protecao compatível para o portal publico de ticket.
+    security_public_link_guard: str = "on"
     # Hosts permitidos no download de mídia (Z-API + CDNs WhatsApp).
     # Separados por vírgula. Sufixos casam por endswith.
     ssrf_allowed_hosts: str = (
