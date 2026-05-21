@@ -239,6 +239,7 @@ export function deleteClientEmployee(id: number) {
 export function createAgent(payload: {
   name: string;
   email: string;
+  phone?: string | null;
   password: string;
   role?: AgentRole;
   is_active?: boolean;
@@ -274,7 +275,14 @@ export function deleteWhatsAppGroup(id: number) {
 
 export function updateAgent(
   id: number,
-  payload: Partial<{ name: string; email: string; password: string; role: AgentRole; is_active: boolean }>
+  payload: Partial<{
+    name: string;
+    email: string;
+    phone: string | null;
+    password: string;
+    role: AgentRole;
+    is_active: boolean;
+  }>
 ) {
   return request<Agent>(`/admin/agents/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
 }

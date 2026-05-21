@@ -69,9 +69,10 @@ export function AdminPanel() {
   const [agentForm, setAgentForm] = useState<{
     name: string;
     email: string;
+    phone: string;
     password: string;
     role: AgentRole;
-  }>({ name: "", email: "", password: "", role: "atendente" });
+  }>({ name: "", email: "", phone: "", password: "", role: "atendente" });
   const [roleForm, setRoleForm] = useState({ name: "", description: "" });
   const [employeeForm, setEmployeeForm] = useState({
     whatsapp_group_id: "",
@@ -322,6 +323,7 @@ export function AdminPanel() {
         const payload: Record<string, unknown> = {
           name: agentForm.name.trim(),
           email: agentForm.email.trim(),
+          phone: agentForm.phone.trim() || null,
           role: agentForm.role
         };
         if (agentForm.password) payload.password = agentForm.password;
@@ -330,11 +332,12 @@ export function AdminPanel() {
         await createAgent({
           name: agentForm.name.trim(),
           email: agentForm.email.trim(),
+          phone: agentForm.phone.trim() || null,
           password: agentForm.password,
           role: agentForm.role
         });
       }
-      setAgentForm({ name: "", email: "", password: "", role: "atendente" });
+      setAgentForm({ name: "", email: "", phone: "", password: "", role: "atendente" });
       setEditingAgentId(null);
       await load();
     } catch (err) {
@@ -719,6 +722,7 @@ export function AdminPanel() {
                     setAgentForm({
                       name: "",
                       email: "",
+                      phone: "",
                       password: "",
                       role: "atendente"
                     });
@@ -744,6 +748,15 @@ export function AdminPanel() {
                 required
                 type="email"
                 value={agentForm.email}
+              />
+            </Field>
+            <Field full label="Telefone WhatsApp">
+              <input
+                onChange={(e) =>
+                  setAgentForm({ ...agentForm, phone: e.target.value })
+                }
+                placeholder="5599999999999"
+                value={agentForm.phone}
               />
             </Field>
             <Field
@@ -786,6 +799,7 @@ export function AdminPanel() {
               { key: "code", label: "Código", code: true },
               { key: "name", label: "Nome" },
               { key: "email", label: "E-mail" },
+              { key: "phone", label: "Telefone" },
               { key: "role", label: "Perfil" },
               { key: "status", label: "Status" }
             ]}
@@ -794,6 +808,7 @@ export function AdminPanel() {
                 String(agent.id),
                 agent.name,
                 agent.email,
+                agent.phone || "—",
                 "__perfil__:" + agent.role,
                 agent.is_active ? "Ativo" : "Inativo"
               ],
@@ -809,6 +824,7 @@ export function AdminPanel() {
                       setAgentForm({
                         name: agent.name,
                         email: agent.email,
+                        phone: agent.phone ?? "",
                         password: "",
                         role: agent.role
                       });

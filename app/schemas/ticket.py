@@ -24,6 +24,7 @@ class AgentRead(BaseModel):
     id: int
     name: str
     email: str
+    phone: str | None = None
 
     model_config = {"from_attributes": True}
 

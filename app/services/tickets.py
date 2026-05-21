@@ -93,12 +93,16 @@ class TicketService:
         ticket = self.tickets.get_detail(ticket_id)
         if ticket is None:
             return None
-        result = await ZApiClient().send_group_message(ticket.whatsapp_group.group_id, message)
+        outbound_message = self._message_with_agent_signature(message, agent)
+        result = await ZApiClient().send_group_message(
+            ticket.whatsapp_group.group_id,
+            outbound_message,
+        )
         external_id = result.get("messageId") or result.get("id")
         saved = TicketMessage(
             ticket=ticket,
             direction=MessageDirection.outbound,
-            content=message,
+            content=outbound_message,
             external_message_id=external_id,
             agent=agent,
         )
@@ -114,6 +118,13 @@ class TicketService:
         self.db.commit()
         self.db.refresh(saved)
         return saved
+
+    @staticmethod
+    def _message_with_agent_signature(message: str, agent: Agent) -> str:
+        identity = agent.name
+        if agent.phone:
+            identity = f"{identity} ({agent.phone})"
+        return f"Atendente THOR: {identity}\n\n{message}"
 
     def link_pending_message(
         self,

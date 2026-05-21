@@ -304,6 +304,20 @@ export function TicketDrawer({ ticket, onChanged, onClose, viewer }: Props) {
               </div>
             ) : null}
           </div>
+          <div>
+            <div className="smallcaps">Atendente</div>
+            <div style={{ fontSize: 13, color: "var(--ink)" }}>
+              {detail?.assigned_agent?.name ?? ticket.assigned_agent?.name ?? "—"}
+            </div>
+            {(detail?.assigned_agent?.phone ?? ticket.assigned_agent?.phone) ? (
+              <div
+                className="font-display"
+                style={{ fontSize: 11, fontStyle: "italic", color: "var(--ink-mute)" }}
+              >
+                {detail?.assigned_agent?.phone ?? ticket.assigned_agent?.phone}
+              </div>
+            ) : null}
+          </div>
         </div>
 
         <div

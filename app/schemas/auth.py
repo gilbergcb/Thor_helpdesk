@@ -17,6 +17,7 @@ class AgentMe(BaseModel):
     id: int
     name: str
     email: EmailStr
+    phone: str | None = None
     role: AgentRole
     must_change_password: bool
 

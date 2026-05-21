@@ -64,6 +64,7 @@ class ClientEmployeeRead(ClientEmployeeCreate):
 class AgentCreate(BaseModel):
     name: str
     email: EmailStr
+    phone: str | None = None
     password: str
     role: AgentRole = AgentRole.atendente
     is_active: bool = True
@@ -73,6 +74,7 @@ class AgentRead(BaseModel):
     id: int
     name: str
     email: EmailStr
+    phone: str | None = None
     role: AgentRole
     is_active: bool
     must_change_password: bool
@@ -97,6 +99,7 @@ class WhatsAppGroupUpdate(BaseModel):
 class AgentUpdate(BaseModel):
     name: str | None = None
     email: EmailStr | None = None
+    phone: str | None = None
     password: str | None = None
     role: AgentRole | None = None
     is_active: bool | None = None

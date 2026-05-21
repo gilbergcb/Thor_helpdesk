@@ -27,7 +27,7 @@ export type Ticket = {
         employee_role: { id: number; name: string } | null;
       }
     | null;
-  assigned_agent: { id: number; name: string; email: string } | null;
+  assigned_agent: { id: number; name: string; email: string; phone: string | null } | null;
 };
 
 export type TicketMessage = {
@@ -96,6 +96,7 @@ export type Agent = {
   id: number;
   name: string;
   email: string;
+  phone: string | null;
   role: AgentRole;
   is_active: boolean;
   must_change_password: boolean;
@@ -105,6 +106,7 @@ export type AgentMe = {
   id: number;
   name: string;
   email: string;
+  phone: string | null;
   role: AgentRole;
   must_change_password: boolean;
 };
