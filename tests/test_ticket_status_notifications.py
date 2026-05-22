@@ -25,10 +25,15 @@ from app.services.tickets import TicketService
 
 
 class FakeZApiClient:
-    sent_messages: list[tuple[str, str]] = []
+    sent_messages: list[tuple[str, str, list[str] | None]] = []
 
-    async def send_group_message(self, group_id: str, message: str) -> dict[str, str]:
-        self.sent_messages.append((group_id, message))
+    async def send_group_message(
+        self,
+        group_id: str,
+        message: str,
+        mentioned: list[str] | None = None,
+    ) -> dict[str, str]:
+        self.sent_messages.append((group_id, message, mentioned))
         return {"messageId": "fake-message-id"}
 
 
@@ -96,6 +101,7 @@ def test_change_status_to_closed_sends_group_notice(
                 "Supervisor THOR (5585999999999).\n\n"
                 "Obrigado pelo retorno. Se precisar de novo atendimento, abra um novo chamado."
             ),
+            ["558588888888"],
         )
     ]
 
@@ -150,6 +156,7 @@ def test_change_status_to_resolved_mentions_ticket_requester(
                 "Supervisor THOR (5585999999999).\n\n"
                 "Se precisar de algo mais, responda por aqui."
             ),
+            ["558588888888"],
         )
     ]
 
@@ -180,6 +187,7 @@ def test_change_status_to_waiting_customer_sends_active_public_link(
                 "https://helpdesk.thorconsultoria.com.br/t/public-token-123\n\n"
                 "O link fica ativo até a finalização do chamado."
             ),
+            ["558588888888"],
         )
     ]
     public_link_count = db.query(TicketPublicLink).filter_by(ticket_id=ticket.id).count()

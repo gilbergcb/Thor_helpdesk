@@ -52,10 +52,21 @@ class ZApiClient:
             headers["Client-Token"] = self.settings.zapi_client_token
         return headers
 
-    async def send_group_message(self, group_id: str, message: str) -> dict:
+    async def send_group_message(
+        self,
+        group_id: str,
+        message: str,
+        mentioned: list[str] | None = None,
+    ) -> dict:
         payload = {"phone": group_id, "message": message}
+        if mentioned:
+            payload["mentioned"] = mentioned
         async with httpx.AsyncClient(timeout=20) as client:
-            response = await client.post(self._url("send-text"), json=payload, headers=self._headers())
+            response = await client.post(
+                self._url("send-text"),
+                json=payload,
+                headers=self._headers(),
+            )
             response.raise_for_status()
             return response.json()
 

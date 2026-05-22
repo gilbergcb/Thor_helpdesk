@@ -187,15 +187,19 @@ class TicketService:
         identity = agent.name
         if agent.phone:
             identity = f"{identity} ({agent.phone})"
-        requester_mention = self._requester_mention(ticket)
-        mention_prefix = f"{requester_mention} " if requester_mention else ""
+        requester_phone = self._requester_mention_phone(ticket)
+        mention_prefix = f"@{requester_phone} " if requester_phone else ""
         message = (
             f"{mention_prefix}O chamado {ticket.protocol} foi marcado como "
             f"resolvido por {identity}.\n\n"
             "Se precisar de algo mais, responda por aqui."
         )
         try:
-            result = await ZApiClient().send_group_message(ticket.whatsapp_group.group_id, message)
+            result = await ZApiClient().send_group_message(
+                ticket.whatsapp_group.group_id,
+                message,
+                mentioned=[requester_phone] if requester_phone else None,
+            )
         except Exception as exc:
             logger.warning("Falha ao avisar resolução do ticket %s: %s", ticket.id, exc)
             return
@@ -220,8 +224,8 @@ class TicketService:
         self.db.commit()
 
     async def _send_waiting_customer_notice(self, ticket: Ticket, agent: Agent) -> None:
-        requester_mention = self._requester_mention(ticket)
-        mention_prefix = f"{requester_mention} " if requester_mention else ""
+        requester_phone = self._requester_mention_phone(ticket)
+        mention_prefix = f"@{requester_phone} " if requester_phone else ""
         public_link_service = PublicTicketLinkService(self.db)
         public_token = public_link_service.create_for_ticket(ticket)
         public_url = public_link_service.public_url(public_token)
@@ -234,7 +238,11 @@ class TicketService:
             "O link fica ativo até a finalização do chamado."
         )
         try:
-            result = await ZApiClient().send_group_message(ticket.whatsapp_group.group_id, message)
+            result = await ZApiClient().send_group_message(
+                ticket.whatsapp_group.group_id,
+                message,
+                mentioned=[requester_phone] if requester_phone else None,
+            )
         except Exception as exc:
             logger.warning("Falha ao avisar aguardando cliente do ticket %s: %s", ticket.id, exc)
             return
@@ -262,14 +270,18 @@ class TicketService:
         identity = agent.name
         if agent.phone:
             identity = f"{identity} ({agent.phone})"
-        requester_mention = self._requester_mention(ticket)
-        mention_prefix = f"{requester_mention} " if requester_mention else ""
+        requester_phone = self._requester_mention_phone(ticket)
+        mention_prefix = f"@{requester_phone} " if requester_phone else ""
         message = (
             f"{mention_prefix}O chamado {ticket.protocol} foi fechado por {identity}.\n\n"
             "Obrigado pelo retorno. Se precisar de novo atendimento, abra um novo chamado."
         )
         try:
-            result = await ZApiClient().send_group_message(ticket.whatsapp_group.group_id, message)
+            result = await ZApiClient().send_group_message(
+                ticket.whatsapp_group.group_id,
+                message,
+                mentioned=[requester_phone] if requester_phone else None,
+            )
         except Exception as exc:
             logger.warning("Falha ao avisar fechamento do ticket %s: %s", ticket.id, exc)
             return
@@ -294,11 +306,11 @@ class TicketService:
         self.db.commit()
 
     @staticmethod
-    def _requester_mention(ticket: Ticket) -> str | None:
+    def _requester_mention_phone(ticket: Ticket) -> str | None:
         if ticket.requester is None or not ticket.requester.phone:
             return None
         phone = "".join(char for char in ticket.requester.phone if char.isdigit())
-        return f"@{phone}" if phone else None
+        return phone or None
 
     def link_pending_message(
         self,
