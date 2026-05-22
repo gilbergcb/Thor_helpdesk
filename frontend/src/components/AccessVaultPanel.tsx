@@ -1,4 +1,5 @@
 import { Eye, Search, X } from "lucide-react";
+import QRCode from "qrcode";
 import { useEffect, useMemo, useState } from "react";
 
 import {
@@ -31,6 +32,7 @@ export function AccessVaultPanel({
   const [loading, setLoading] = useState(true);
   const [totpSetup, setTotpSetup] = useState<TotpSetup | null>(null);
   const [totpSetupCode, setTotpSetupCode] = useState("");
+  const [totpQrCodeUrl, setTotpQrCodeUrl] = useState("");
   const [totpBusy, setTotpBusy] = useState(false);
 
   const filteredAccesses = useMemo(() => {
@@ -65,6 +67,32 @@ export function AccessVaultPanel({
   useEffect(() => {
     void load();
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!totpSetup) {
+      setTotpQrCodeUrl("");
+      return;
+    }
+    QRCode.toDataURL(totpSetup.provisioning_uri, {
+      errorCorrectionLevel: "M",
+      margin: 1,
+      width: 192,
+      color: {
+        dark: "#1f1710",
+        light: "#fffaf2"
+      }
+    })
+      .then((url) => {
+        if (!cancelled) setTotpQrCodeUrl(url);
+      })
+      .catch(() => {
+        if (!cancelled) setTotpQrCodeUrl("");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [totpSetup]);
 
   async function revealAccess(id: number) {
     const totpCode = totpCodeById[id]?.trim();
@@ -187,6 +215,23 @@ export function AccessVaultPanel({
           </div>
           {totpSetup ? (
             <div className="thor-access-secret-grid compact">
+              {totpQrCodeUrl ? (
+                <div>
+                  <div className="smallcaps" style={{ marginBottom: 4 }}>
+                    QR Code
+                  </div>
+                  <img
+                    alt="QR Code para configurar 2FA no Bitwarden ou 1Password"
+                    src={totpQrCodeUrl}
+                    style={{
+                      border: "1px solid var(--hairline)",
+                      display: "block",
+                      height: 192,
+                      width: 192
+                    }}
+                  />
+                </div>
+              ) : null}
               <SecretLine label="Chave" value={totpSetup.secret} />
               <SecretLine label="URI" value={totpSetup.provisioning_uri} />
               <div>
