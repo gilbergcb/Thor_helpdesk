@@ -6,11 +6,13 @@ import {
   useRef,
   useState
 } from "react";
-import { FileText, Paperclip, Send, X } from "lucide-react";
+import { CheckCircle2, FileText, Paperclip, Send, X } from "lucide-react";
 
 import {
   getPublicTicket,
   getPublicTicketByCode,
+  resolvePublicTicket,
+  resolvePublicTicketByCode,
   sendPublicTicketMessage,
   sendPublicTicketMessageByCode
 } from "../services/api";
@@ -244,7 +246,29 @@ export function PublicTicketPage({ token, mode = "token" }: Props) {
     }
   }
 
+  async function handleResolve() {
+    if (!ticket) return;
+    if (!confirm(`Marcar o chamado ${ticket.protocol} como resolvido?`)) return;
+    setBusy(true);
+    setError("");
+    try {
+      const next =
+        mode === "code"
+          ? await resolvePublicTicketByCode(token)
+          : await resolvePublicTicket(token);
+      setTicket(next);
+      clearPending();
+      setMessage("");
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : "Não foi possível resolver o chamado.";
+      setError(detail);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const remainingSlots = MAX_FILES - pending.length;
+  const isTerminal = ticket?.status === "resolvido" || ticket?.status === "fechado";
 
   return (
     <main className="thor-public-page">
@@ -313,72 +337,90 @@ export function PublicTicketPage({ token, mode = "token" }: Props) {
               })}
             </div>
 
-            <form className="thor-public-composer" onSubmit={handleSubmit}>
-              <textarea
-                onChange={(event) => setMessage(event.target.value)}
-                onPaste={handlePaste}
-                placeholder="Digite sua mensagem ou cole um print com Ctrl+V..."
-                value={message}
-              />
-
-              <div className="thor-public-composer-toolbar">
-                <button
-                  className="thor-btn-ghost"
-                  disabled={busy || remainingSlots <= 0}
-                  onClick={openFilePicker}
-                  title={
-                    remainingSlots > 0
-                      ? `Anexar arquivo (até ${remainingSlots} restante${remainingSlots === 1 ? "" : "s"})`
-                      : "Limite de arquivos atingido"
-                  }
-                  type="button"
-                >
-                  <Paperclip size={16} /> Anexar
-                </button>
-                <small>
-                  Aceita PNG, JPG, WebP, GIF, PDF, TXT, CSV, JSON • até 15 MB por arquivo • máximo 3
-                </small>
-                <input
-                  accept={ACCEPT_ATTR}
-                  multiple
-                  onChange={onFileChange}
-                  ref={fileInputRef}
-                  style={{ display: "none" }}
-                  type="file"
-                />
+            {isTerminal ? (
+              <div className="thor-public-composer">
+                <div className="thor-public-error">
+                  Chamado finalizado. O link não aceita novas interações.
+                </div>
               </div>
+            ) : (
+              <form className="thor-public-composer" onSubmit={handleSubmit}>
+                <textarea
+                  onChange={(event) => setMessage(event.target.value)}
+                  onPaste={handlePaste}
+                  placeholder="Digite sua mensagem ou cole um print com Ctrl+V..."
+                  value={message}
+                />
 
-              {pending.length > 0 ? (
-                <ul className="thor-public-composer-pending">
-                  {pending.map((p) => (
-                    <li className={isImageMime(p.file.type) ? "is-image" : "is-file"} key={p.id}>
-                      {p.previewUrl ? (
-                        <img alt={p.file.name} src={p.previewUrl} />
-                      ) : (
-                        <FileText size={20} />
-                      )}
-                      <div>
-                        <strong title={p.file.name}>{p.file.name}</strong>
-                        <small>{formatBytes(p.file.size)}</small>
-                      </div>
-                      <button
-                        aria-label={`Remover ${p.file.name}`}
-                        className="thor-public-composer-remove"
-                        disabled={busy}
-                        onClick={() => removePending(p.id)}
-                        type="button"
-                      >
-                        <X size={14} />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
+                <div className="thor-public-composer-toolbar">
+                  <button
+                    className="thor-btn-ghost"
+                    disabled={busy || remainingSlots <= 0}
+                    onClick={openFilePicker}
+                    title={
+                      remainingSlots > 0
+                        ? `Anexar arquivo (até ${remainingSlots} restante${remainingSlots === 1 ? "" : "s"})`
+                        : "Limite de arquivos atingido"
+                    }
+                    type="button"
+                  >
+                    <Paperclip size={16} /> Anexar
+                  </button>
+                  <small>
+                    Aceita PNG, JPG, WebP, GIF, PDF, TXT, CSV, JSON • até 15 MB por arquivo • máximo 3
+                  </small>
+                  <input
+                    accept={ACCEPT_ATTR}
+                    multiple
+                    onChange={onFileChange}
+                    ref={fileInputRef}
+                    style={{ display: "none" }}
+                    type="file"
+                  />
+                </div>
 
-              <button className="thor-btn" disabled={!canSend} type="submit">
-                <Send size={16} /> Enviar mensagem
-              </button>
-            </form>
+                {pending.length > 0 ? (
+                  <ul className="thor-public-composer-pending">
+                    {pending.map((p) => (
+                      <li className={isImageMime(p.file.type) ? "is-image" : "is-file"} key={p.id}>
+                        {p.previewUrl ? (
+                          <img alt={p.file.name} src={p.previewUrl} />
+                        ) : (
+                          <FileText size={20} />
+                        )}
+                        <div>
+                          <strong title={p.file.name}>{p.file.name}</strong>
+                          <small>{formatBytes(p.file.size)}</small>
+                        </div>
+                        <button
+                          aria-label={`Remover ${p.file.name}`}
+                          className="thor-public-composer-remove"
+                          disabled={busy}
+                          onClick={() => removePending(p.id)}
+                          type="button"
+                        >
+                          <X size={14} />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+                  <button className="thor-btn" disabled={!canSend} type="submit">
+                    <Send size={16} /> Enviar mensagem
+                  </button>
+                  <button
+                    className="thor-btn secondary"
+                    disabled={busy}
+                    onClick={handleResolve}
+                    type="button"
+                  >
+                    <CheckCircle2 size={16} /> Marcar como resolvido
+                  </button>
+                </div>
+              </form>
+            )}
           </>
         ) : null}
       </section>

@@ -26,7 +26,7 @@ from app.core.public_links import (
     validate_public_ticket_token,
 )
 from app.core.ratelimit import limiter
-from app.models.enums import HistoryEventType, MessageDirection
+from app.models.enums import HistoryEventType, MessageDirection, TicketStatus
 from app.models.ticket import (
     TicketHistory,
     TicketMessage,
@@ -269,6 +269,77 @@ def create_public_ticket_message_by_code(
         files=files,
         by_code=True,
     )
+
+
+@router.post("/tickets/{token}/resolve", response_model=PublicTicketRead)
+@limiter.limit(_public_ticket_post_rate_limit)
+def resolve_public_ticket(
+    request: Request,
+    token: str,
+    db: Annotated[Session, Depends(get_db)],
+) -> PublicTicketRead:
+    _validate_public_token(token)
+    link = PublicTicketLinkService(db).get_valid_link(token)
+    if link is None:
+        logger.warning(
+            "public_ticket.resolve.invalid_or_expired %s",
+            public_token_fingerprint(token),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Link inválido ou expirado"
+        )
+    return _resolve_public_ticket(link, token, db)
+
+
+@router.post("/tickets/by-code/{code}/resolve", response_model=PublicTicketRead)
+@limiter.limit(_public_ticket_post_rate_limit)
+def resolve_public_ticket_by_code(
+    request: Request,
+    code: str,
+    db: Annotated[Session, Depends(get_db)],
+) -> PublicTicketRead:
+    _validate_public_code(code)
+    link = PublicTicketLinkService(db).get_valid_code_link(code)
+    if link is None:
+        logger.warning(
+            "public_ticket.resolve.code_invalid_or_expired %s",
+            public_token_fingerprint(code),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Link inválido ou expirado"
+        )
+    return _resolve_public_ticket(link, code, db, by_code=True)
+
+
+def _resolve_public_ticket(
+    link,
+    access_key: str,
+    db: Session,
+    *,
+    by_code: bool = False,
+) -> PublicTicketRead:
+    ticket = link.ticket
+    ticket.status = TicketStatus.resolvido
+    ticket.closed_at = datetime.now(UTC)
+    db.add(
+        TicketMessage(
+            ticket=ticket,
+            direction=MessageDirection.inbound,
+            content="Cliente marcou o chamado como resolvido pelo portal público.",
+            sender=ticket.requester,
+        )
+    )
+    db.add(
+        TicketHistory(
+            ticket=ticket,
+            event_type=HistoryEventType.status_changed,
+            description="Cliente marcou o chamado como resolvido pelo portal público",
+        )
+    )
+    PublicTicketLinkService(db).revoke_for_ticket(ticket)
+    db.commit()
+    db.refresh(ticket)
+    return _public_ticket_read(link, access_key, by_code=by_code)
 
 
 def _create_public_ticket_message(

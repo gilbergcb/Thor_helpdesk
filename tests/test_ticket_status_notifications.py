@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 
+from app.api.public import _resolve_public_ticket
 from app.core.database import Base
 from app.models import (
     Agent,
@@ -21,6 +22,7 @@ from app.models import (
     WhatsAppUser,
 )
 from app.models.enums import AgentRole, HistoryEventType, MessageDirection, TicketStatus
+from app.services.public_links import PublicTicketLinkService
 from app.services.tickets import TicketService
 
 
@@ -170,6 +172,46 @@ def test_reply_sends_ticket_reference_with_public_link(
     assert saved.content == FakeZApiClient.sent_messages[0][1]
     public_link_count = db.query(TicketPublicLink).filter_by(ticket_id=ticket.id).count()
     assert public_link_count == 1
+
+
+def test_public_link_can_mark_ticket_as_resolved(
+    db: Session,
+    ticket_fixture: tuple[Ticket, Agent],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    ticket, _agent = ticket_fixture
+    monkeypatch.setattr(
+        "app.services.public_links.generate_public_ticket_token",
+        lambda: "public-token-123",
+    )
+    token = PublicTicketLinkService(db).create_for_ticket(ticket)
+    db.commit()
+    link = PublicTicketLinkService(db).get_valid_link(token)
+
+    assert link is not None
+    result = _resolve_public_ticket(link, token, db)
+
+    db.refresh(ticket)
+    assert result.status == TicketStatus.resolvido
+    assert ticket.status == TicketStatus.resolvido
+    assert ticket.closed_at is not None
+    assert db.query(TicketPublicLink).filter_by(ticket_id=ticket.id, revoked_at=None).count() == 0
+    saved_message = db.scalar(
+        select(TicketMessage).where(
+            TicketMessage.ticket_id == ticket.id,
+            TicketMessage.content == "Cliente marcou o chamado como resolvido pelo portal público.",
+        )
+    )
+    assert saved_message is not None
+    saved_history = db.scalar(
+        select(TicketHistory).where(
+            TicketHistory.ticket_id == ticket.id,
+            TicketHistory.event_type == HistoryEventType.status_changed,
+            TicketHistory.description
+            == "Cliente marcou o chamado como resolvido pelo portal público",
+        )
+    )
+    assert saved_history is not None
 
 
 def test_change_status_to_resolved_mentions_ticket_requester(

@@ -208,6 +208,18 @@ export async function sendPublicTicketMessageByCode(
   return response.json();
 }
 
+export function resolvePublicTicket(token: string) {
+  return request<PublicTicket>(`/public/tickets/${encodeURIComponent(token)}/resolve`, {
+    method: "POST"
+  });
+}
+
+export function resolvePublicTicketByCode(code: string) {
+  return request<PublicTicket>(`/public/tickets/by-code/${encodeURIComponent(code)}/resolve`, {
+    method: "POST"
+  });
+}
+
 export function getClients() {
   return request<Client[]>("/admin/clients");
 }
