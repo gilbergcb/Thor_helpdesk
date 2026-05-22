@@ -105,7 +105,9 @@ class TicketService:
         self.db.commit()
         self.db.refresh(ticket)
         if old_status != status:
-            if status == TicketStatus.resolvido:
+            if status == TicketStatus.aguardando_cliente:
+                await self._send_waiting_customer_notice(ticket, agent)
+            elif status == TicketStatus.resolvido:
                 await self._send_resolution_notice(ticket, agent)
             elif status == TicketStatus.fechado:
                 await self._send_closed_notice(ticket, agent)
@@ -213,6 +215,45 @@ class TicketService:
                 agent=agent,
                 event_type=HistoryEventType.message_sent,
                 description="Aviso de resolução enviado ao grupo via Z-API",
+            )
+        )
+        self.db.commit()
+
+    async def _send_waiting_customer_notice(self, ticket: Ticket, agent: Agent) -> None:
+        requester_mention = self._requester_mention(ticket)
+        mention_prefix = f"{requester_mention} " if requester_mention else ""
+        public_link_service = PublicTicketLinkService(self.db)
+        public_token = public_link_service.create_for_ticket(ticket)
+        public_url = public_link_service.public_url(public_token)
+        self.db.commit()
+
+        message = (
+            f"{mention_prefix}O chamado {ticket.protocol} está aguardando seu retorno.\n\n"
+            "Acesse o link abaixo para visualizar o atendimento e responder pelo portal:\n"
+            f"{public_url}\n\n"
+            "O link fica ativo até a finalização do chamado."
+        )
+        try:
+            result = await ZApiClient().send_group_message(ticket.whatsapp_group.group_id, message)
+        except Exception as exc:
+            logger.warning("Falha ao avisar aguardando cliente do ticket %s: %s", ticket.id, exc)
+            return
+        external_id = result.get("messageId") or result.get("id")
+        self.db.add(
+            TicketMessage(
+                ticket=ticket,
+                direction=MessageDirection.outbound,
+                content=message,
+                external_message_id=external_id,
+                agent=agent,
+            )
+        )
+        self.db.add(
+            TicketHistory(
+                ticket=ticket,
+                agent=agent,
+                event_type=HistoryEventType.message_sent,
+                description="Aviso de aguardando cliente enviado ao grupo via Z-API",
             )
         )
         self.db.commit()

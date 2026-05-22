@@ -16,6 +16,7 @@ from app.models import (
     Ticket,
     TicketHistory,
     TicketMessage,
+    TicketPublicLink,
     WhatsAppGroup,
     WhatsAppUser,
 )
@@ -151,6 +152,46 @@ def test_change_status_to_resolved_mentions_ticket_requester(
             ),
         )
     ]
+
+
+def test_change_status_to_waiting_customer_sends_active_public_link(
+    db: Session,
+    ticket_fixture: tuple[Ticket, Agent],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    ticket, agent = ticket_fixture
+    FakeZApiClient.sent_messages = []
+    monkeypatch.setattr("app.services.tickets.ZApiClient", FakeZApiClient)
+    monkeypatch.setattr(
+        "app.services.public_links.generate_public_ticket_token",
+        lambda: "public-token-123",
+    )
+
+    asyncio.run(
+        TicketService(db).change_status(ticket.id, TicketStatus.aguardando_cliente, agent)
+    )
+
+    assert FakeZApiClient.sent_messages == [
+        (
+            "120363000000000000-group",
+            (
+                "@558588888888 O chamado THOR-20260522-0001 está aguardando seu retorno.\n\n"
+                "Acesse o link abaixo para visualizar o atendimento e responder pelo portal:\n"
+                "https://helpdesk.thorconsultoria.com.br/t/public-token-123\n\n"
+                "O link fica ativo até a finalização do chamado."
+            ),
+        )
+    ]
+    public_link_count = db.query(TicketPublicLink).filter_by(ticket_id=ticket.id).count()
+    assert public_link_count == 1
+
+    saved_history = db.scalar(
+        select(TicketHistory).where(
+            TicketHistory.event_type == HistoryEventType.message_sent,
+            TicketHistory.description == "Aviso de aguardando cliente enviado ao grupo via Z-API",
+        )
+    )
+    assert saved_history is not None
 
 
 def test_ticket_detail_only_shows_pending_messages_after_ticket_opened_at(
