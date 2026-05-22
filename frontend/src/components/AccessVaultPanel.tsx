@@ -97,7 +97,7 @@ export function AccessVaultPanel({
   async function revealAccess(id: number) {
     const totpCode = totpCodeById[id]?.trim();
     if (!totpCode) {
-      setError("Informe o código 1Password deste usuário.");
+      setError("Informe o código G.Autenticador deste usuário.");
       return;
     }
     setBusyId(id);
@@ -129,7 +129,7 @@ export function AccessVaultPanel({
   async function finishTotpSetup() {
     const code = totpSetupCode.trim();
     if (!code) {
-      setError("Informe o código gerado no 1Password.");
+      setError("Informe o código gerado no G.Autenticador.");
       return;
     }
     setTotpBusy(true);
@@ -172,7 +172,7 @@ export function AccessVaultPanel({
           Acessos dos clientes
         </h2>
         <span className="foot-italic thor-access-header-note">
-          {me.totp_enabled ? "Consulte com código 1Password" : "Configure 1Password para consultar"}
+          {me.totp_enabled ? "Consulte com código G.Autenticador" : "Configure G.Autenticador para consultar"}
         </span>
       </div>
 
@@ -201,7 +201,7 @@ export function AccessVaultPanel({
         <div className="thor-access-reveal-panel" style={{ marginBottom: 18 }}>
           <div className="thor-access-reveal-head">
             <div>
-              <div className="smallcaps">1Password</div>
+              <div className="smallcaps">G.Autenticador</div>
               <h3 className="font-display">Ativar código por usuário</h3>
             </div>
             <button
@@ -221,7 +221,7 @@ export function AccessVaultPanel({
                     QR Code
                   </div>
                   <img
-                    alt="QR Code para configurar 2FA no Bitwarden ou 1Password"
+                    alt="QR Code para configurar 2FA no G.Autenticador"
                     src={totpQrCodeUrl}
                     style={{
                       border: "1px solid var(--hairline)",
@@ -323,7 +323,7 @@ export function AccessVaultPanel({
                   <td style={cellStyle} data-label="Código">
                     <div className="thor-access-token-row">
                       <input
-                        aria-label={`Código 1Password para ${access.title}`}
+                        aria-label={`Código G.Autenticador para ${access.title}`}
                         className="thor-access-token-input"
                         onChange={(event) =>
                           setTotpCodeById({
@@ -331,7 +331,7 @@ export function AccessVaultPanel({
                             [access.id]: event.target.value
                           })
                         }
-                        placeholder="1Password"
+                        placeholder="G.Autenticador"
                         type="password"
                         value={totpCodeById[access.id] ?? ""}
                       />
@@ -389,7 +389,7 @@ export function AccessVaultPanel({
                 </div>
                 <div className="thor-access-card-actions">
                   <input
-                    aria-label={`Código 1Password para ${access.title}`}
+                    aria-label={`Código G.Autenticador para ${access.title}`}
                     className="thor-access-token-input"
                     onChange={(event) =>
                       setTotpCodeById({
@@ -397,7 +397,7 @@ export function AccessVaultPanel({
                         [access.id]: event.target.value
                       })
                     }
-                    placeholder="código 1Password"
+                    placeholder="código G.Autenticador"
                     type="password"
                     value={totpCodeById[access.id] ?? ""}
                   />

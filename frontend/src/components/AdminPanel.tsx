@@ -181,7 +181,7 @@ export function AdminPanel() {
         secret: accessForm.secret,
         notes: accessForm.notes.trim() || null
       });
-      setNotice("Acesso salvo. A visualização agora usa o código 1Password do usuário logado.");
+      setNotice("Acesso salvo. A visualização agora usa o código G.Autenticador do usuário logado.");
       setAccessForm((current) => ({
         client_id: current.client_id,
         title: "",
@@ -201,7 +201,7 @@ export function AdminPanel() {
   async function revealAccess(id: number) {
     const code = totpCodeById[id]?.trim();
     if (!code) {
-      setError("Informe o código 1Password deste usuário.");
+      setError("Informe o código G.Autenticador deste usuário.");
       return;
     }
     setBusy(true);
@@ -1196,7 +1196,7 @@ export function AdminPanel() {
                 return (
                   <>
                     <input
-                      aria-label="Código 1Password"
+                      aria-label="Código G.Autenticador"
                       className="thor-admin-token-input"
                       onChange={(e) =>
                         setTotpCodeById({
@@ -1204,7 +1204,7 @@ export function AdminPanel() {
                           [access.id]: e.target.value
                         })
                       }
-                      placeholder="1Password"
+                      placeholder="G.Autenticador"
                       type="password"
                       value={totpCodeById[access.id] ?? ""}
                     />

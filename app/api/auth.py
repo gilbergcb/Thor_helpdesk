@@ -116,7 +116,7 @@ def enable_totp(
     if not secret or not verify_totp_code(secret, payload.code):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Codigo 1Password invalido",
+            detail="Codigo G.Autenticador invalido",
         )
     agent.totp_enabled = True
     db.commit()
@@ -134,7 +134,7 @@ def disable_totp(
     if not agent.totp_enabled or not secret or not verify_totp_code(secret, payload.code):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Codigo 1Password invalido",
+            detail="Codigo G.Autenticador invalido",
         )
     agent.totp_enabled = False
     agent.totp_secret_encrypted = None

@@ -474,7 +474,7 @@ def reveal_client_access_credential(
         )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Configure o 2FA no 1Password antes de visualizar acessos",
+            detail="Configure o 2FA no G.Autenticador antes de visualizar acessos",
         )
     if not verify_totp_code(totp_secret, payload.totp_code):
         _vault_audit.warning(
@@ -490,7 +490,7 @@ def reveal_client_access_credential(
         )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Codigo 1Password invalido",
+            detail="Codigo G.Autenticador invalido",
         )
     _vault_audit.info(
         "vault.reveal.ok actor_id=%s actor_email=%s actor_role=%s "
