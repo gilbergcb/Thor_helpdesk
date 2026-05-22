@@ -231,8 +231,27 @@ export function TicketDrawer({ ticket, onChanged, onClose, viewer }: Props) {
       setDetail(null);
       return;
     }
-    getTicket(ticket.id).then(setDetail).catch(console.error);
-  }, [ticket]);
+    let cancelled = false;
+    const loadDetail = async () => {
+      try {
+        const nextDetail = await getTicket(ticket.id);
+        if (!cancelled) {
+          setDetail(nextDetail);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error(error);
+        }
+      }
+    };
+
+    loadDetail();
+    const interval = window.setInterval(loadDetail, 8000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [ticket?.id]);
 
   async function handleAssign() {
     if (!ticket) return;
