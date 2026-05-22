@@ -124,7 +124,15 @@ class TicketService:
         ticket = self.tickets.get_detail(ticket_id)
         if ticket is None:
             return None
-        outbound_message = self._message_with_agent_signature(message, agent)
+        public_link_service = PublicTicketLinkService(self.db)
+        public_token = public_link_service.create_for_ticket(ticket)
+        public_url = public_link_service.public_url(public_token)
+        outbound_message = self._message_with_agent_signature(
+            message,
+            agent,
+            ticket_protocol=ticket.protocol,
+            public_url=public_url,
+        )
         result = await ZApiClient().send_group_message(
             ticket.whatsapp_group.group_id,
             outbound_message,
@@ -151,11 +159,19 @@ class TicketService:
         return saved
 
     @staticmethod
-    def _message_with_agent_signature(message: str, agent: Agent) -> str:
+    def _message_with_agent_signature(
+        message: str,
+        agent: Agent,
+        ticket_protocol: str | None = None,
+        public_url: str | None = None,
+    ) -> str:
         identity = agent.name
         if agent.phone:
             identity = f"{identity} ({agent.phone})"
-        return f"Atendente THOR: {identity}\n\n{message}"
+        ticket_reference = ""
+        if ticket_protocol and public_url:
+            ticket_reference = f"\nChamado {ticket_protocol}: {public_url}"
+        return f"Atendente THOR: {identity}{ticket_reference}\n\n{message}"
 
     async def _send_assignment_notice(self, ticket: Ticket, agent: Agent) -> None:
         identity = agent.name

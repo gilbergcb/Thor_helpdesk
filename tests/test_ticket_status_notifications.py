@@ -137,6 +137,41 @@ def test_change_status_does_not_repeat_closed_notice_for_same_status(
     assert FakeZApiClient.sent_messages == []
 
 
+def test_reply_sends_ticket_reference_with_public_link(
+    db: Session,
+    ticket_fixture: tuple[Ticket, Agent],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    ticket, agent = ticket_fixture
+    FakeZApiClient.sent_messages = []
+    monkeypatch.setattr("app.services.tickets.ZApiClient", FakeZApiClient)
+    monkeypatch.setattr(
+        "app.services.public_links.generate_public_ticket_token",
+        lambda: "reply-token-123",
+    )
+
+    saved = asyncio.run(
+        TicketService(db).reply(ticket.id, "Resposta enviada para o cliente.", agent)
+    )
+
+    assert saved is not None
+    assert FakeZApiClient.sent_messages == [
+        (
+            "120363000000000000-group",
+            (
+                "Atendente THOR: Supervisor THOR (5585999999999)\n"
+                "Chamado THOR-20260522-0001: "
+                "https://helpdesk.thorconsultoria.com.br/t/reply-token-123\n\n"
+                "Resposta enviada para o cliente."
+            ),
+            None,
+        )
+    ]
+    assert saved.content == FakeZApiClient.sent_messages[0][1]
+    public_link_count = db.query(TicketPublicLink).filter_by(ticket_id=ticket.id).count()
+    assert public_link_count == 1
+
+
 def test_change_status_to_resolved_mentions_ticket_requester(
     db: Session,
     ticket_fixture: tuple[Ticket, Agent],
