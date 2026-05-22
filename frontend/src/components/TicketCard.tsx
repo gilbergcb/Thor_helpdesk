@@ -47,6 +47,7 @@ export function TicketCard({ ticket, selected, onSelect }: Props) {
   const clientName = ticket.client?.name ?? "Cliente";
   const groupName = ticket.whatsapp_group?.name ?? "";
   const requesterName = ticket.requester?.name ?? ticket.requester?.phone ?? "";
+  const agentName = ticket.assigned_agent?.name ?? "";
   return (
     <button
       className={`thor-card ${selected ? "is-active" : ""} text-left`}
@@ -157,7 +158,18 @@ export function TicketCard({ ticket, selected, onSelect }: Props) {
         <span className={`priority ${ticket.priority ?? ""}`}>
           {priorityLabels[ticket.priority ?? "media"] ?? "— média"}
         </span>
-        <span className="tnum">{relativeTime(ticket.opened_at)}</span>
+        <span
+          style={{
+            minWidth: 0,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            textAlign: "right"
+          }}
+          title={agentName ? `Atendente: ${agentName}` : relativeTime(ticket.opened_at)}
+        >
+          {agentName ? `Atendente: ${agentName}` : relativeTime(ticket.opened_at)}
+        </span>
       </div>
     </button>
   );
