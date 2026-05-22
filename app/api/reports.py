@@ -95,6 +95,7 @@ def attendance_report(
     client_id: int | None = None,
     employee_id: int | None = None,
     agent_id: int | None = None,
+    ticket_status: TicketStatus | None = None,
 ) -> AttendanceReport:
     date_from = date_from or _default_date_from()
     date_to = date_to or _default_date_to()
@@ -122,6 +123,8 @@ def attendance_report(
         query = query.where(WhatsAppUser.employee_id == employee_id)
     if agent_id is not None:
         query = query.where(Ticket.assigned_agent_id == agent_id)
+    if ticket_status is not None:
+        query = query.where(Ticket.status == ticket_status)
 
     tickets = db.scalars(query).unique().all()
     rows = [_ticket_to_report_row(ticket) for ticket in tickets]

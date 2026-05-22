@@ -408,6 +408,7 @@ export function getAttendanceReport(filters: {
   client_id?: string;
   employee_id?: string;
   agent_id?: string;
+  ticket_status?: string;
 }) {
   const params = new URLSearchParams();
   Object.entries(filters).forEach(([key, value]) => {

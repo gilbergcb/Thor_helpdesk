@@ -13,6 +13,16 @@ const statusLabels: Record<string, string> = {
   fechado: "fechado"
 };
 
+const statusOptions = [
+  ["", "Todos"],
+  ["novo", "Novo"],
+  ["triagem", "Triagem"],
+  ["em_atendimento", "Em atendimento"],
+  ["aguardando_cliente", "Aguardando cliente"],
+  ["resolvido", "Resolvido"],
+  ["fechado", "Fechado"]
+] as const;
+
 function dateOnly(value: Date): string {
   const year = value.getFullYear();
   const month = String(value.getMonth() + 1).padStart(2, "0");
@@ -78,6 +88,7 @@ export function ReportsPanel() {
   const [clientId, setClientId] = useState("");
   const [employeeId, setEmployeeId] = useState("");
   const [agentId, setAgentId] = useState("");
+  const [ticketStatus, setTicketStatus] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -90,7 +101,8 @@ export function ReportsPanel() {
         date_to: dateTo,
         client_id: clientId,
         employee_id: employeeId,
-        agent_id: agentId
+        agent_id: agentId,
+        ticket_status: ticketStatus
       });
       setReport(data);
     } catch (err) {
@@ -154,7 +166,7 @@ export function ReportsPanel() {
         <div className="thor-admin-form-head">
           <span className="smallcaps">Filtros</span>
         </div>
-        <div className="thor-admin-form-grid" style={{ gridTemplateColumns: "repeat(5, minmax(0, 1fr))" }}>
+        <div className="thor-admin-form-grid" style={{ gridTemplateColumns: "repeat(6, minmax(0, 1fr))" }}>
           <div className="thor-field">
             <label>De</label>
             <input onChange={(event) => setDateFrom(event.target.value)} type="date" value={dateFrom} />
@@ -187,6 +199,14 @@ export function ReportsPanel() {
               <option value="">Todos</option>
               {options.agents.map((item) => (
                 <option key={item.id} value={item.id}>{item.name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="thor-field">
+            <label>Status</label>
+            <select onChange={(event) => setTicketStatus(event.target.value)} value={ticketStatus}>
+              {statusOptions.map(([value, label]) => (
+                <option key={value || "todos"} value={value}>{label}</option>
               ))}
             </select>
           </div>
