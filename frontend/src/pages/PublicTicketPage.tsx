@@ -8,11 +8,17 @@ import {
 } from "react";
 import { FileText, Paperclip, Send, X } from "lucide-react";
 
-import { getPublicTicket, sendPublicTicketMessage } from "../services/api";
+import {
+  getPublicTicket,
+  getPublicTicketByCode,
+  sendPublicTicketMessage,
+  sendPublicTicketMessageByCode
+} from "../services/api";
 import type { PublicTicket, PublicTicketAttachment } from "../types/api";
 
 type Props = {
   token: string;
+  mode?: "token" | "code";
 };
 
 const statusLabels: Record<string, string> = {
@@ -108,7 +114,7 @@ function AttachmentBadge({ attachment }: { attachment: PublicTicketAttachment })
   );
 }
 
-export function PublicTicketPage({ token }: Props) {
+export function PublicTicketPage({ token, mode = "token" }: Props) {
   const [ticket, setTicket] = useState<PublicTicket | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -133,7 +139,9 @@ export function PublicTicketPage({ token }: Props) {
   async function load() {
     setError("");
     try {
-      setTicket(await getPublicTicket(token));
+      const next =
+        mode === "code" ? await getPublicTicketByCode(token) : await getPublicTicket(token);
+      setTicket(next);
     } catch {
       setError("Link inválido, expirado ou chamado já finalizado.");
     }
@@ -221,7 +229,10 @@ export function PublicTicketPage({ token }: Props) {
     setError("");
     try {
       const files = pending.map((p) => p.file);
-      const next = await sendPublicTicketMessage(token, message.trim(), files);
+      const next =
+        mode === "code"
+          ? await sendPublicTicketMessageByCode(token, message.trim(), files)
+          : await sendPublicTicketMessage(token, message.trim(), files);
       setTicket(next);
       setMessage("");
       clearPending();

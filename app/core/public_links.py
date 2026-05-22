@@ -4,6 +4,7 @@ import re
 from fastapi import HTTPException, status
 
 PUBLIC_TICKET_TOKEN_RE = re.compile(r"^[A-Za-z0-9_-]{32,128}$")
+PUBLIC_TICKET_CODE_RE = re.compile(r"^[A-Za-z0-9_-]{8,32}$")
 
 
 def public_token_fingerprint(token: str) -> str:
@@ -15,6 +16,15 @@ def public_token_fingerprint(token: str) -> str:
 
 def validate_public_ticket_token(token: str) -> None:
     if PUBLIC_TICKET_TOKEN_RE.fullmatch(token):
+        return
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Link inválido ou expirado",
+    )
+
+
+def validate_public_ticket_code(code: str) -> None:
+    if PUBLIC_TICKET_CODE_RE.fullmatch(code):
         return
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,

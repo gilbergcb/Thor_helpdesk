@@ -827,6 +827,10 @@ export default function App() {
   if (publicTicketMatch) {
     return <PublicTicketPage token={decodeURIComponent(publicTicketMatch[1])} />;
   }
+  const publicCodeMatch = window.location.pathname.match(/^\/c\/[^/]+\/([^/]+)$/);
+  if (publicCodeMatch) {
+    return <PublicTicketPage mode="code" token={decodeURIComponent(publicCodeMatch[1])} />;
+  }
 
   return <PrivateApp />;
 }

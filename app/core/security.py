@@ -31,6 +31,10 @@ def generate_public_ticket_token() -> str:
     return secrets.token_urlsafe(32)
 
 
+def generate_public_ticket_code() -> str:
+    return secrets.token_urlsafe(8)
+
+
 def hash_public_token(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 

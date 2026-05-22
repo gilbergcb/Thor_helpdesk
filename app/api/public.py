@@ -20,7 +20,11 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.database import get_db
-from app.core.public_links import public_token_fingerprint, validate_public_ticket_token
+from app.core.public_links import (
+    public_token_fingerprint,
+    validate_public_ticket_code,
+    validate_public_ticket_token,
+)
 from app.core.ratelimit import limiter
 from app.models.enums import HistoryEventType, MessageDirection
 from app.models.ticket import (
@@ -74,6 +78,15 @@ def _validate_public_token(token: str) -> None:
         raise
 
 
+def _validate_public_code(code: str) -> None:
+    try:
+        validate_public_ticket_code(code)
+        return
+    except HTTPException:
+        logger.warning("public_ticket.invalid_code_format %s", public_token_fingerprint(code))
+        raise
+
+
 def _sanitize_filename(name: str | None) -> str | None:
     if not name:
         return None
@@ -87,11 +100,18 @@ def _sanitize_filename(name: str | None) -> str | None:
     return name[:100] or None
 
 
-def _build_attachment_url(token: str, attachment_id: int) -> str:
-    return f"/api/v1/public/tickets/{token}/attachments/{attachment_id}"
+def _build_attachment_url(access_key: str, attachment_id: int, *, by_code: bool = False) -> str:
+    if by_code:
+        return f"/api/v1/public/tickets/by-code/{access_key}/attachments/{attachment_id}"
+    return f"/api/v1/public/tickets/{access_key}/attachments/{attachment_id}"
 
 
-def _serialize_message(message: TicketMessage, token: str) -> PublicTicketMessageRead:
+def _serialize_message(
+    message: TicketMessage,
+    access_key: str,
+    *,
+    by_code: bool = False,
+) -> PublicTicketMessageRead:
     attachments = [
         PublicTicketAttachmentRead(
             id=a.id,
@@ -99,7 +119,7 @@ def _serialize_message(message: TicketMessage, token: str) -> PublicTicketMessag
             byte_size=a.byte_size,
             original_filename=a.original_filename,
             source=a.source,
-            url=_build_attachment_url(token, a.id),
+            url=_build_attachment_url(access_key, a.id, by_code=by_code),
         )
         for a in message.attachments
     ]
@@ -114,7 +134,7 @@ def _serialize_message(message: TicketMessage, token: str) -> PublicTicketMessag
     )
 
 
-def _public_ticket_read(link, token: str) -> PublicTicketRead:
+def _public_ticket_read(link, access_key: str, *, by_code: bool = False) -> PublicTicketRead:
     ticket = link.ticket
     return PublicTicketRead(
         protocol=ticket.protocol,
@@ -124,7 +144,7 @@ def _public_ticket_read(link, token: str) -> PublicTicketRead:
         group_name=ticket.whatsapp_group.name,
         requester_name=ticket.requester.name if ticket.requester else None,
         assigned_agent=ticket.assigned_agent,
-        messages=[_serialize_message(m, token) for m in ticket.messages],
+        messages=[_serialize_message(m, access_key, by_code=by_code) for m in ticket.messages],
     )
 
 
@@ -168,6 +188,25 @@ def get_public_ticket(
     return _public_ticket_read(link, token)
 
 
+@router.get("/tickets/by-code/{code}", response_model=PublicTicketRead)
+@limiter.limit(_public_ticket_get_rate_limit)
+def get_public_ticket_by_code(
+    request: Request,
+    code: str,
+    db: Annotated[Session, Depends(get_db)],
+) -> PublicTicketRead:
+    _validate_public_code(code)
+    link = PublicTicketLinkService(db).get_valid_code_link(code)
+    if link is None:
+        logger.warning("public_ticket.code_invalid_or_expired %s", public_token_fingerprint(code))
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Link inválido ou expirado",
+        )
+    logger.info("public_ticket.view ticket_id=%s", link.ticket_id)
+    return _public_ticket_read(link, code, by_code=True)
+
+
 @router.post("/tickets/{token}/messages", response_model=PublicTicketRead)
 @limiter.limit(_public_ticket_upload_rate_limit)
 def create_public_ticket_message(
@@ -184,7 +223,6 @@ def create_public_ticket_message(
     Validações: MIME via libmagic, tamanho por arquivo, quantidade por
     request, quota horária acumulada por ticket. Falhas validadas retornam
     400/413/415 com mensagem clara; falhas internas viram 500."""
-    settings = get_settings()
     _validate_public_token(token)
     link = PublicTicketLinkService(db).get_valid_link(token)
     if link is None:
@@ -194,7 +232,56 @@ def create_public_ticket_message(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Link inválido ou expirado"
         )
+    return _create_public_ticket_message(
+        request=request,
+        link=link,
+        access_key=token,
+        db=db,
+        message=message,
+        files=files,
+    )
 
+
+@router.post("/tickets/by-code/{code}/messages", response_model=PublicTicketRead)
+@limiter.limit(_public_ticket_upload_rate_limit)
+def create_public_ticket_message_by_code(
+    request: Request,
+    code: str,
+    db: Annotated[Session, Depends(get_db)],
+    message: Annotated[str, Form()] = "",
+    files: Annotated[list[UploadFile] | None, File()] = None,
+) -> PublicTicketRead:
+    _validate_public_code(code)
+    link = PublicTicketLinkService(db).get_valid_code_link(code)
+    if link is None:
+        logger.warning(
+            "public_ticket.message.code_invalid_or_expired %s", public_token_fingerprint(code)
+        )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Link inválido ou expirado"
+        )
+    return _create_public_ticket_message(
+        request=request,
+        link=link,
+        access_key=code,
+        db=db,
+        message=message,
+        files=files,
+        by_code=True,
+    )
+
+
+def _create_public_ticket_message(
+    request: Request,
+    link,
+    access_key: str,
+    db: Session,
+    message: str,
+    files: list[UploadFile] | None,
+    *,
+    by_code: bool = False,
+) -> PublicTicketRead:
+    settings = get_settings()
     text = (message or "").strip()
     files = [f for f in (files or []) if f is not None and (f.filename or f.size)]
     if not text and not files:
@@ -222,7 +309,7 @@ def create_public_ticket_message(
     consumed = _hourly_upload_bytes(db, link.ticket_id)
 
     ip = request.client.host if request.client else None
-    token_fp = public_token_fingerprint(token)
+    token_fp = public_token_fingerprint(access_key)
 
     # Lê todos os bytes na memória (cap 15MB × 3 = 45MB max — aceitável).
     raw_files: list[tuple[bytes, str | None, str | None]] = []
@@ -317,7 +404,7 @@ def create_public_ticket_message(
     )
     # recarrega link para refletir nova mensagem na resposta
     db.refresh(link.ticket)
-    return _public_ticket_read(link, token)
+    return _public_ticket_read(link, access_key, by_code=by_code)
 
 
 @router.get("/tickets/{token}/attachments/{attachment_id}")
@@ -340,6 +427,42 @@ def get_public_ticket_attachment(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Link inválido ou expirado"
         )
+    return _public_ticket_attachment_response(
+        link=link,
+        attachment_id=attachment_id,
+        db=db,
+        access_key=token,
+    )
+
+
+@router.get("/tickets/by-code/{code}/attachments/{attachment_id}")
+@limiter.limit(_public_ticket_get_rate_limit)
+def get_public_ticket_attachment_by_code(
+    request: Request,
+    code: str,
+    attachment_id: int,
+    db: Annotated[Session, Depends(get_db)],
+) -> FileResponse:
+    _validate_public_code(code)
+    link = PublicTicketLinkService(db).get_valid_code_link(code)
+    if link is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Link inválido ou expirado"
+        )
+    return _public_ticket_attachment_response(
+        link=link,
+        attachment_id=attachment_id,
+        db=db,
+        access_key=code,
+    )
+
+
+def _public_ticket_attachment_response(
+    link,
+    attachment_id: int,
+    db: Session,
+    access_key: str,
+) -> FileResponse:
     att = db.scalar(
         select(TicketMessageAttachment)
         .join(TicketMessage, TicketMessage.id == TicketMessageAttachment.ticket_message_id)
@@ -351,7 +474,7 @@ def get_public_ticket_attachment(
     if att is None:
         logger.warning(
             "public_attachment.not_found token=%s attachment_id=%s",
-            public_token_fingerprint(token), attachment_id,
+            public_token_fingerprint(access_key), attachment_id,
         )
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Anexo não encontrado")
 

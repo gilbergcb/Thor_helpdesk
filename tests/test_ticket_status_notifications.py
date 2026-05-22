@@ -146,8 +146,8 @@ def test_reply_sends_ticket_reference_with_public_link(
     FakeZApiClient.sent_messages = []
     monkeypatch.setattr("app.services.tickets.ZApiClient", FakeZApiClient)
     monkeypatch.setattr(
-        "app.services.public_links.generate_public_ticket_token",
-        lambda: "reply-token-123",
+        "app.services.public_links.generate_public_ticket_code",
+        lambda: "abc123XYZ",
     )
 
     saved = asyncio.run(
@@ -160,8 +160,8 @@ def test_reply_sends_ticket_reference_with_public_link(
             "120363000000000000-group",
             (
                 "Atendente THOR: Supervisor THOR (5585999999999)\n"
-                "Chamado THOR-20260522-0001: "
-                "https://helpdesk.thorconsultoria.com.br/t/reply-token-123\n\n"
+                "Chamado: https://helpdesk.thorconsultoria.com.br/c/"
+                "THOR-20260522-0001/abc123XYZ\n\n"
                 "Resposta enviada para o cliente."
             ),
             None,

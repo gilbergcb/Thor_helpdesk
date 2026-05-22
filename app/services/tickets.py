@@ -125,8 +125,8 @@ class TicketService:
         if ticket is None:
             return None
         public_link_service = PublicTicketLinkService(self.db)
-        public_token = public_link_service.create_for_ticket(ticket)
-        public_url = public_link_service.public_url(public_token)
+        public_code = public_link_service.create_short_for_ticket(ticket)
+        public_url = public_link_service.public_short_url(ticket, public_code)
         outbound_message = self._message_with_agent_signature(
             message,
             agent,
@@ -170,7 +170,7 @@ class TicketService:
             identity = f"{identity} ({agent.phone})"
         ticket_reference = ""
         if ticket_protocol and public_url:
-            ticket_reference = f"\nChamado {ticket_protocol}: {public_url}"
+            ticket_reference = f"\nChamado: {public_url}"
         return f"Atendente THOR: {identity}{ticket_reference}\n\n{message}"
 
     async def _send_assignment_notice(self, ticket: Ticket, agent: Agent) -> None:

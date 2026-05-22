@@ -63,6 +63,7 @@ class TicketPublicLink(TimestampMixin, Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     ticket_id: Mapped[int] = mapped_column(ForeignKey("tickets.id"), nullable=False)
     token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
+    code_hash: Mapped[str | None] = mapped_column(String(64), unique=True, index=True)
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_access_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

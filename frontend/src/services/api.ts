@@ -148,6 +148,10 @@ export function getPublicTicket(token: string) {
   return request<PublicTicket>(`/public/tickets/${encodeURIComponent(token)}`);
 }
 
+export function getPublicTicketByCode(code: string) {
+  return request<PublicTicket>(`/public/tickets/by-code/${encodeURIComponent(code)}`);
+}
+
 export async function sendPublicTicketMessage(
   token: string,
   message: string,
@@ -162,6 +166,33 @@ export async function sendPublicTicketMessage(
   }
   const response = await fetch(
     `${API_URL}/public/tickets/${encodeURIComponent(token)}/messages`,
+    { method: "POST", body: form }
+  );
+  if (!response.ok) {
+    let detail = "";
+    try {
+      const data = await response.json();
+      detail = (data && data.detail) || "";
+    } catch {
+      detail = await response.text().catch(() => "");
+    }
+    throw new Error(detail || `Falha ao enviar mensagem (HTTP ${response.status})`);
+  }
+  return response.json();
+}
+
+export async function sendPublicTicketMessageByCode(
+  code: string,
+  message: string,
+  files: File[] = []
+): Promise<PublicTicket> {
+  const form = new FormData();
+  form.append("message", message);
+  for (const file of files) {
+    form.append("files", file, file.name);
+  }
+  const response = await fetch(
+    `${API_URL}/public/tickets/by-code/${encodeURIComponent(code)}/messages`,
     { method: "POST", body: form }
   );
   if (!response.ok) {
