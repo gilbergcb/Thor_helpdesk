@@ -47,14 +47,21 @@ class TicketRepository:
     def get_by_protocol(self, protocol: str) -> Ticket | None:
         return self.db.scalar(select(Ticket).where(Ticket.protocol == protocol))
 
-    def pending_for_group(self, group_id: int) -> list[PendingTicketMessage]:
+    def pending_for_group(
+        self,
+        group_id: int,
+        created_at_from: datetime | None = None,
+    ) -> list[PendingTicketMessage]:
+        filters = [
+            PendingTicketMessage.whatsapp_group_id == group_id,
+            PendingTicketMessage.status == "pending",
+        ]
+        if created_at_from is not None:
+            filters.append(PendingTicketMessage.created_at >= created_at_from)
         return list(
             self.db.scalars(
                 select(PendingTicketMessage)
-                .where(
-                    PendingTicketMessage.whatsapp_group_id == group_id,
-                    PendingTicketMessage.status == "pending",
-                )
+                .where(*filters)
                 .options(joinedload(PendingTicketMessage.sender))
                 .order_by(PendingTicketMessage.created_at)
             )

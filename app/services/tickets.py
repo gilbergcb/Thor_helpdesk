@@ -32,7 +32,10 @@ class TicketService:
     def get_detail(self, ticket_id: int) -> Ticket | None:
         ticket = self.tickets.get_detail(ticket_id)
         if ticket is not None:
-            ticket.pending_messages = self.tickets.pending_for_group(ticket.whatsapp_group_id)
+            ticket.pending_messages = self.tickets.pending_for_group(
+                ticket.whatsapp_group_id,
+                created_at_from=ticket.opened_at,
+            )
         return ticket
 
     async def assign(

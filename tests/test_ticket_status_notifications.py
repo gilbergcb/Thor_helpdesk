@@ -1,6 +1,6 @@
 import asyncio
 import os
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from sqlalchemy import create_engine, select
@@ -9,7 +9,16 @@ from sqlalchemy.orm import Session, sessionmaker
 os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 
 from app.core.database import Base
-from app.models import Agent, Client, Ticket, TicketHistory, TicketMessage, WhatsAppGroup
+from app.models import (
+    Agent,
+    Client,
+    PendingTicketMessage,
+    Ticket,
+    TicketHistory,
+    TicketMessage,
+    WhatsAppGroup,
+    WhatsAppUser,
+)
 from app.models.enums import AgentRole, HistoryEventType, MessageDirection, TicketStatus
 from app.services.tickets import TicketService
 
@@ -113,3 +122,38 @@ def test_change_status_does_not_repeat_closed_notice_for_same_status(
     asyncio.run(TicketService(db).change_status(ticket.id, TicketStatus.fechado, agent))
 
     assert FakeZApiClient.sent_messages == []
+
+
+def test_ticket_detail_only_shows_pending_messages_after_ticket_opened_at(
+    db: Session,
+    ticket_fixture: tuple[Ticket, Agent],
+) -> None:
+    ticket, _agent = ticket_fixture
+    sender = WhatsAppUser(
+        group=ticket.whatsapp_group,
+        phone="5585888888888",
+        name="Cliente",
+    )
+    older_pending = PendingTicketMessage(
+        whatsapp_group=ticket.whatsapp_group,
+        sender=sender,
+        status="pending",
+        content="Mensagem antes da abertura",
+        created_at=ticket.opened_at - timedelta(minutes=30),
+    )
+    newer_pending = PendingTicketMessage(
+        whatsapp_group=ticket.whatsapp_group,
+        sender=sender,
+        status="pending",
+        content="Mensagem depois da abertura",
+        created_at=ticket.opened_at + timedelta(minutes=5),
+    )
+    db.add_all([sender, older_pending, newer_pending])
+    db.commit()
+
+    detail = TicketService(db).get_detail(ticket.id)
+
+    assert detail is not None
+    assert [pending.content for pending in detail.pending_messages] == [
+        "Mensagem depois da abertura"
+    ]
