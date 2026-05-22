@@ -2,23 +2,36 @@ import { Eye, Search, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import {
+  enableTotp,
   getClientAccessCredentials,
-  revealClientAccessCredential
+  revealClientAccessCredential,
+  setupTotp
 } from "../services/api";
 import type {
+  AgentMe,
   ClientAccessCredential,
-  ClientAccessCredentialReveal
+  ClientAccessCredentialReveal,
+  TotpSetup
 } from "../types/api";
 
-export function AccessVaultPanel() {
+export function AccessVaultPanel({
+  me,
+  onMeChanged
+}: {
+  me: AgentMe;
+  onMeChanged: (agent: AgentMe) => void;
+}) {
   const [accesses, setAccesses] = useState<ClientAccessCredential[]>([]);
-  const [revealTokenById, setRevealTokenById] = useState<Record<number, string>>({});
+  const [totpCodeById, setTotpCodeById] = useState<Record<number, string>>({});
   const [revealed, setRevealed] = useState<ClientAccessCredentialReveal | null>(null);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState<number | null>(null);
   const [activeAccessId, setActiveAccessId] = useState<number | null>(null);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [totpSetup, setTotpSetup] = useState<TotpSetup | null>(null);
+  const [totpSetupCode, setTotpSetupCode] = useState("");
+  const [totpBusy, setTotpBusy] = useState(false);
 
   const filteredAccesses = useMemo(() => {
     const term = query.trim().toLowerCase();
@@ -54,22 +67,54 @@ export function AccessVaultPanel() {
   }, []);
 
   async function revealAccess(id: number) {
-    const revealToken = revealTokenById[id]?.trim();
-    if (!revealToken) {
-      setError("Informe o token de visualização deste acesso.");
+    const totpCode = totpCodeById[id]?.trim();
+    if (!totpCode) {
+      setError("Informe o código 1Password deste usuário.");
       return;
     }
     setBusyId(id);
     setError("");
     setRevealed(null);
     try {
-      const secret = await revealClientAccessCredential(id, revealToken);
+      const secret = await revealClientAccessCredential(id, totpCode);
       setActiveAccessId(id);
       setRevealed(secret);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Token inválido");
+      setError(err instanceof Error ? err.message : "Código inválido");
     } finally {
       setBusyId(null);
+    }
+  }
+
+  async function startTotpSetup() {
+    setTotpBusy(true);
+    setError("");
+    try {
+      setTotpSetup(await setupTotp());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao iniciar 2FA");
+    } finally {
+      setTotpBusy(false);
+    }
+  }
+
+  async function finishTotpSetup() {
+    const code = totpSetupCode.trim();
+    if (!code) {
+      setError("Informe o código gerado no 1Password.");
+      return;
+    }
+    setTotpBusy(true);
+    setError("");
+    try {
+      const updated = await enableTotp(code);
+      onMeChanged(updated);
+      setTotpSetup(null);
+      setTotpSetupCode("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Código inválido");
+    } finally {
+      setTotpBusy(false);
     }
   }
 
@@ -99,7 +144,7 @@ export function AccessVaultPanel() {
           Acessos dos clientes
         </h2>
         <span className="foot-italic thor-access-header-note">
-          Consulte com token de visualização
+          {me.totp_enabled ? "Consulte com código 1Password" : "Configure 1Password para consultar"}
         </span>
       </div>
 
@@ -122,6 +167,53 @@ export function AccessVaultPanel() {
 
       {revealed ? (
         <RevealSummary revealed={revealed} onClose={() => setRevealed(null)} />
+      ) : null}
+
+      {!me.totp_enabled ? (
+        <div className="thor-access-reveal-panel" style={{ marginBottom: 18 }}>
+          <div className="thor-access-reveal-head">
+            <div>
+              <div className="smallcaps">1Password</div>
+              <h3 className="font-display">Ativar código por usuário</h3>
+            </div>
+            <button
+              className="thor-btn sm"
+              disabled={totpBusy}
+              onClick={startTotpSetup}
+              type="button"
+            >
+              Configurar
+            </button>
+          </div>
+          {totpSetup ? (
+            <div className="thor-access-secret-grid compact">
+              <SecretLine label="Chave" value={totpSetup.secret} />
+              <SecretLine label="URI" value={totpSetup.provisioning_uri} />
+              <div>
+                <div className="smallcaps" style={{ marginBottom: 4 }}>
+                  Código
+                </div>
+                <div className="thor-access-token-row">
+                  <input
+                    className="thor-access-token-input"
+                    onChange={(event) => setTotpSetupCode(event.target.value)}
+                    placeholder="123456"
+                    type="password"
+                    value={totpSetupCode}
+                  />
+                  <button
+                    className="thor-btn sm"
+                    disabled={totpBusy}
+                    onClick={finishTotpSetup}
+                    type="button"
+                  >
+                    Ativar
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </div>
       ) : null}
 
       <div className="thor-access-toolbar">
@@ -152,7 +244,7 @@ export function AccessVaultPanel() {
             <table className="thor-access-table">
             <thead>
               <tr>
-                {["Cliente", "Acesso", "URL / Host", "Usuário", "Token"].map(
+                {["Cliente", "Acesso", "URL / Host", "Usuário", "Código"].map(
                   (label) => (
                     <th
                       key={label}
@@ -183,20 +275,20 @@ export function AccessVaultPanel() {
                   <td style={cellStyle} data-label="Usuário">
                     <code>{access.username || "—"}</code>
                   </td>
-                  <td style={cellStyle} data-label="Token">
+                  <td style={cellStyle} data-label="Código">
                     <div className="thor-access-token-row">
                       <input
-                        aria-label={`Token de visualização para ${access.title}`}
+                        aria-label={`Código 1Password para ${access.title}`}
                         className="thor-access-token-input"
                         onChange={(event) =>
-                          setRevealTokenById({
-                            ...revealTokenById,
+                          setTotpCodeById({
+                            ...totpCodeById,
                             [access.id]: event.target.value
                           })
                         }
-                        placeholder="token"
+                        placeholder="1Password"
                         type="password"
-                        value={revealTokenById[access.id] ?? ""}
+                        value={totpCodeById[access.id] ?? ""}
                       />
                       <button
                         className="thor-icon-btn"
@@ -252,17 +344,17 @@ export function AccessVaultPanel() {
                 </div>
                 <div className="thor-access-card-actions">
                   <input
-                    aria-label={`Token de visualização para ${access.title}`}
+                    aria-label={`Código 1Password para ${access.title}`}
                     className="thor-access-token-input"
                     onChange={(event) =>
-                      setRevealTokenById({
-                        ...revealTokenById,
+                      setTotpCodeById({
+                        ...totpCodeById,
                         [access.id]: event.target.value
                       })
                     }
-                    placeholder="token de visualização"
+                    placeholder="código 1Password"
                     type="password"
-                    value={revealTokenById[access.id] ?? ""}
+                    value={totpCodeById[access.id] ?? ""}
                   />
                   <button
                     className="thor-btn sm"

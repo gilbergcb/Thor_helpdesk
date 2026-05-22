@@ -14,30 +14,26 @@ from app.core.security import (
     encrypt_secret,
     generate_reveal_token,
     get_password_hash,
-    verify_password,
+    verify_totp_code,
 )
-from app.models.enums import AgentRole
 from app.models.client import Client, ClientAccessCredential, ClientEmployee, EmployeeRole
 from app.models.security import AdminAuditLog
 from app.models.support import Agent
 from app.models.whatsapp import WhatsAppGroup
-
-# F-10: audit log dedicado para acessos ao vault de credenciais de cliente.
-_vault_audit = logging.getLogger("security.vault")
 from app.schemas.admin import (
     AdminAuditLogRead,
     AgentCreate,
     AgentRead,
     AgentUpdate,
-    ClientEmployeeCreate,
-    ClientEmployeeRead,
-    ClientEmployeeUpdate,
     ClientAccessCredentialCreate,
     ClientAccessCredentialCreated,
     ClientAccessCredentialRead,
     ClientAccessCredentialReveal,
     ClientAccessCredentialRevealRequest,
     ClientCreate,
+    ClientEmployeeCreate,
+    ClientEmployeeRead,
+    ClientEmployeeUpdate,
     ClientRead,
     ClientUpdate,
     EmployeeRoleCreate,
@@ -47,6 +43,9 @@ from app.schemas.admin import (
     WhatsAppGroupRead,
     WhatsAppGroupUpdate,
 )
+
+# F-10: audit log dedicado para acessos ao vault de credenciais de cliente.
+_vault_audit = logging.getLogger("security.vault")
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -153,7 +152,11 @@ def list_employee_roles(
     return list(db.scalars(select(EmployeeRole).order_by(EmployeeRole.name)))
 
 
-@router.post("/employee-roles", response_model=EmployeeRoleRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/employee-roles",
+    response_model=EmployeeRoleRead,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_employee_role(
     payload: EmployeeRoleCreate,
     db: Annotated[Session, Depends(get_db)],
@@ -183,7 +186,11 @@ def list_client_employees(
     )
 
 
-@router.post("/client-employees", response_model=ClientEmployeeRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/client-employees",
+    response_model=ClientEmployeeRead,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_client_employee(
     payload: ClientEmployeeCreate,
     db: Annotated[Session, Depends(get_db)],
@@ -353,7 +360,10 @@ def delete_agent(
     current: Annotated[Agent, Depends(require_admin)],
 ) -> None:
     if agent_id == current.id:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Não é possível excluir o próprio usuário")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Não é possível excluir o próprio usuário",
+        )
     db.delete(_get_or_404(db, Agent, agent_id))
     _commit_or_conflict(db)
     record_admin_action(
@@ -407,7 +417,6 @@ def create_client_access_credential(
     db: Annotated[Session, Depends(get_db)],
     current: Annotated[Agent, Depends(require_admin)],
 ) -> ClientAccessCredentialCreated:
-    reveal_token = generate_reveal_token()
     credential = ClientAccessCredential(
         client_id=payload.client_id,
         title=payload.title,
@@ -415,7 +424,7 @@ def create_client_access_credential(
         username=payload.username,
         secret_encrypted=encrypt_secret(payload.secret),
         notes_encrypted=encrypt_secret(payload.notes),
-        reveal_token_hash=get_password_hash(reveal_token),
+        reveal_token_hash=get_password_hash(generate_reveal_token()),
         created_by_agent_id=current.id,
         is_active=payload.is_active,
     )
@@ -433,7 +442,7 @@ def create_client_access_credential(
         request=request,
         payload={"client_id": payload.client_id, "title": payload.title},
     )
-    return ClientAccessCredentialCreated(**data, reveal_token=reveal_token)
+    return ClientAccessCredentialCreated(**data, reveal_token=None)
 
 
 @router.post(
@@ -450,19 +459,39 @@ def reveal_client_access_credential(
     credential = _get_or_404(db, ClientAccessCredential, credential_id)
     if not credential.is_active:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Acesso inativo")
-    if not verify_password(payload.reveal_token, credential.reveal_token_hash):
+    totp_secret = decrypt_secret(actor.totp_secret_encrypted)
+    if not actor.totp_enabled or not totp_secret:
         _vault_audit.warning(
             "vault.reveal.denied actor_id=%s actor_email=%s credential_id=%s "
-            "client_id=%s ip=%s reason=bad_reveal_token",
+            "client_id=%s ip=%s reason=totp_not_configured",
             actor.id, actor.email, credential.id, credential.client_id,
             request.client.host if request.client else None,
         )
         record_admin_action(
             db, actor=actor, action="vault.credential.reveal.denied",
             target_type="client_access_credential", target_id=credential.id,
-            request=request, payload={"reason": "bad_reveal_token"},
+            request=request, payload={"reason": "totp_not_configured"},
         )
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Token de visualização inválido")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Configure o 2FA no 1Password antes de visualizar acessos",
+        )
+    if not verify_totp_code(totp_secret, payload.totp_code):
+        _vault_audit.warning(
+            "vault.reveal.denied actor_id=%s actor_email=%s credential_id=%s "
+            "client_id=%s ip=%s reason=bad_totp_code",
+            actor.id, actor.email, credential.id, credential.client_id,
+            request.client.host if request.client else None,
+        )
+        record_admin_action(
+            db, actor=actor, action="vault.credential.reveal.denied",
+            target_type="client_access_credential", target_id=credential.id,
+            request=request, payload={"reason": "bad_totp_code"},
+        )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Codigo 1Password invalido",
+        )
     _vault_audit.info(
         "vault.reveal.ok actor_id=%s actor_email=%s actor_role=%s "
         "credential_id=%s client_id=%s ip=%s",

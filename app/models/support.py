@@ -16,6 +16,8 @@ class Agent(TimestampMixin, Base):
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     must_change_password: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    totp_secret_encrypted: Mapped[str | None] = mapped_column(String(255))
+    totp_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     role: Mapped[AgentRole] = mapped_column(
         Enum(AgentRole, name="agent_role"),
         default=AgentRole.atendente,

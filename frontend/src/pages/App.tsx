@@ -275,6 +275,14 @@ function PrivateApp() {
     );
   }
 
+  if (!me) {
+    return (
+      <main className="min-h-screen grid place-items-center" style={{ background: "var(--bg)" }}>
+        <span className="foot-italic">Carregando usuário...</span>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen" style={{ background: "var(--bg)" }}>
       <header className="thor-app-header">
@@ -535,13 +543,13 @@ function PrivateApp() {
           ) : null}
         </div>
       ) : view === "accesses" ? (
-        <AccessVaultPanel />
+        <AccessVaultPanel me={me} onMeChanged={setMe} />
       ) : view === "reports" ? (
         <ReportsPanel />
       ) : isAdmin ? (
         <AdminPanel />
       ) : (
-        <AccessVaultPanel />
+        <AccessVaultPanel me={me} onMeChanged={setMe} />
       )}
     </main>
   );

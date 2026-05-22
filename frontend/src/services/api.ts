@@ -12,6 +12,7 @@ import type {
   EmployeeRole,
   KanbanColumn,
   PublicTicket,
+  TotpSetup,
   Ticket,
   TicketDetail,
   TicketMessage,
@@ -71,6 +72,26 @@ export function changeOwnPassword(current_password: string, new_password: string
   return request<AgentMe>("/auth/change-password", {
     method: "POST",
     body: JSON.stringify({ current_password, new_password })
+  });
+}
+
+export function setupTotp() {
+  return request<TotpSetup>("/auth/totp/setup", {
+    method: "POST"
+  });
+}
+
+export function enableTotp(code: string) {
+  return request<AgentMe>("/auth/totp/enable", {
+    method: "POST",
+    body: JSON.stringify({ code })
+  });
+}
+
+export function disableTotp(code: string) {
+  return request<AgentMe>("/auth/totp/disable", {
+    method: "POST",
+    body: JSON.stringify({ code })
   });
 }
 
@@ -432,10 +453,10 @@ export function createClientAccessCredential(payload: {
   });
 }
 
-export function revealClientAccessCredential(id: number, reveal_token: string) {
+export function revealClientAccessCredential(id: number, totp_code: string) {
   return request<ClientAccessCredentialReveal>(`/admin/client-access-credentials/${id}/reveal`, {
     method: "POST",
-    body: JSON.stringify({ reveal_token })
+    body: JSON.stringify({ totp_code })
   });
 }
 

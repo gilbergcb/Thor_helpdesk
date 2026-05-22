@@ -90,7 +90,7 @@ export function AdminPanel() {
     secret: "",
     notes: ""
   });
-  const [revealTokenById, setRevealTokenById] = useState<Record<number, string>>({});
+  const [totpCodeById, setTotpCodeById] = useState<Record<number, string>>({});
   const [revealed, setRevealed] = useState<ClientAccessCredentialReveal | null>(null);
   const [editingClientId, setEditingClientId] = useState<number | null>(null);
   const [editingGroupId, setEditingGroupId] = useState<number | null>(null);
@@ -173,7 +173,7 @@ export function AdminPanel() {
     setError("");
     setNotice("");
     try {
-      const created = await createClientAccessCredential({
+      await createClientAccessCredential({
         client_id: Number(accessForm.client_id),
         title: accessForm.title.trim(),
         access_url: accessForm.access_url.trim() || null,
@@ -181,7 +181,7 @@ export function AdminPanel() {
         secret: accessForm.secret,
         notes: accessForm.notes.trim() || null
       });
-      setNotice(`Token de visualização gerado: ${created.reveal_token}. Guarde em local seguro; ele não será exibido novamente.`);
+      setNotice("Acesso salvo. A visualização agora usa o código 1Password do usuário logado.");
       setAccessForm((current) => ({
         client_id: current.client_id,
         title: "",
@@ -199,18 +199,18 @@ export function AdminPanel() {
   }
 
   async function revealAccess(id: number) {
-    const token = revealTokenById[id]?.trim();
-    if (!token) {
-      setError("Informe o token de visualização deste acesso.");
+    const code = totpCodeById[id]?.trim();
+    if (!code) {
+      setError("Informe o código 1Password deste usuário.");
       return;
     }
     setBusy(true);
     setError("");
     setRevealed(null);
     try {
-      setRevealed(await revealClientAccessCredential(id, token));
+      setRevealed(await revealClientAccessCredential(id, code));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Token inválido");
+      setError(err instanceof Error ? err.message : "Código inválido");
     } finally {
       setBusy(false);
     }
@@ -1196,17 +1196,17 @@ export function AdminPanel() {
                 return (
                   <>
                     <input
-                      aria-label="Token de visualização"
+                      aria-label="Código 1Password"
                       className="thor-admin-token-input"
                       onChange={(e) =>
-                        setRevealTokenById({
-                          ...revealTokenById,
+                        setTotpCodeById({
+                          ...totpCodeById,
                           [access.id]: e.target.value
                         })
                       }
-                      placeholder="token"
+                      placeholder="1Password"
                       type="password"
-                      value={revealTokenById[access.id] ?? ""}
+                      value={totpCodeById[access.id] ?? ""}
                     />
                     <RowButton onClick={() => revealAccess(access.id)} title="Visualizar">
                       <Eye size={14} />

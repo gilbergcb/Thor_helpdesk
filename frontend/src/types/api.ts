@@ -142,6 +142,7 @@ export type Agent = {
   role: AgentRole;
   is_active: boolean;
   must_change_password: boolean;
+  totp_enabled: boolean;
 };
 
 export type AgentMe = {
@@ -151,6 +152,12 @@ export type AgentMe = {
   phone: string | null;
   role: AgentRole;
   must_change_password: boolean;
+  totp_enabled: boolean;
+};
+
+export type TotpSetup = {
+  secret: string;
+  provisioning_uri: string;
 };
 
 export type EmployeeRole = {
@@ -185,7 +192,7 @@ export type ClientAccessCredential = {
 };
 
 export type ClientAccessCredentialCreated = ClientAccessCredential & {
-  reveal_token: string;
+  reveal_token: string | null;
 };
 
 export type ClientAccessCredentialReveal = {

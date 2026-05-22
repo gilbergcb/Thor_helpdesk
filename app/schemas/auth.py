@@ -20,6 +20,7 @@ class AgentMe(BaseModel):
     phone: str | None = None
     role: AgentRole
     must_change_password: bool
+    totp_enabled: bool
 
     model_config = {"from_attributes": True}
 
@@ -27,3 +28,16 @@ class AgentMe(BaseModel):
 class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str
+
+
+class TotpSetupResponse(BaseModel):
+    secret: str
+    provisioning_uri: str
+
+
+class TotpEnableRequest(BaseModel):
+    code: str
+
+
+class TotpDisableRequest(BaseModel):
+    code: str

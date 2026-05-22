@@ -1,9 +1,13 @@
 import base64
 import hashlib
+import hmac
 import secrets
+import struct
+import time
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from urllib.parse import quote
 
 import jwt
 from cryptography.fernet import Fernet, InvalidToken
@@ -25,6 +29,45 @@ def get_password_hash(password: str) -> str:
 
 def generate_reveal_token() -> str:
     return secrets.token_urlsafe(24)
+
+
+def generate_totp_secret() -> str:
+    return base64.b32encode(secrets.token_bytes(20)).decode("ascii").rstrip("=")
+
+
+def totp_provisioning_uri(secret: str, email: str, issuer: str = "THOR HelpDesk") -> str:
+    label = f"{issuer}:{email}"
+    return (
+        "otpauth://totp/"
+        f"{quote(label)}?secret={secret}&issuer={quote(issuer)}&algorithm=SHA1&digits=6&period=30"
+    )
+
+
+def verify_totp_code(
+    secret: str,
+    code: str,
+    *,
+    at_time: int | None = None,
+    window: int = 1,
+) -> bool:
+    normalized = "".join(char for char in code if char.isdigit())
+    if len(normalized) != 6:
+        return False
+    now = int(time.time() if at_time is None else at_time)
+    step = now // 30
+    for offset in range(-window, window + 1):
+        if hmac.compare_digest(_totp_at(secret, step + offset), normalized):
+            return True
+    return False
+
+
+def _totp_at(secret: str, counter: int) -> str:
+    padded = secret + "=" * (-len(secret) % 8)
+    key = base64.b32decode(padded, casefold=True)
+    digest = hmac.new(key, struct.pack(">Q", counter), hashlib.sha1).digest()
+    offset = digest[-1] & 0x0F
+    value = struct.unpack(">I", digest[offset : offset + 4])[0] & 0x7FFFFFFF
+    return f"{value % 1_000_000:06d}"
 
 
 def generate_public_ticket_token() -> str:

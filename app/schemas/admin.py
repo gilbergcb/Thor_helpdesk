@@ -97,6 +97,7 @@ class AgentRead(BaseModel):
     role: AgentRole
     is_active: bool
     must_change_password: bool
+    totp_enabled: bool
 
     model_config = {"from_attributes": True}
 
@@ -163,11 +164,11 @@ class ClientAccessCredentialRead(BaseModel):
 
 
 class ClientAccessCredentialCreated(ClientAccessCredentialRead):
-    reveal_token: str
+    reveal_token: str | None = None
 
 
 class ClientAccessCredentialRevealRequest(BaseModel):
-    reveal_token: str
+    totp_code: str
 
 
 class ClientAccessCredentialReveal(BaseModel):

@@ -5,13 +5,28 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
-from app.api.deps import bearer_scheme, get_current_agent_allow_password_change
+from app.api.deps import bearer_scheme, get_current_agent, get_current_agent_allow_password_change
 from app.core.database import get_db
 from app.core.ratelimit import limiter, ratelimit_active
-from app.core.security import decode_access_token_full
+from app.core.security import (
+    decode_access_token_full,
+    decrypt_secret,
+    encrypt_secret,
+    generate_totp_secret,
+    totp_provisioning_uri,
+    verify_totp_code,
+)
 from app.models.security import RevokedToken
 from app.models.support import Agent
-from app.schemas.auth import AgentMe, ChangePasswordRequest, LoginRequest, TokenResponse
+from app.schemas.auth import (
+    AgentMe,
+    ChangePasswordRequest,
+    LoginRequest,
+    TokenResponse,
+    TotpDisableRequest,
+    TotpEnableRequest,
+    TotpSetupResponse,
+)
 from app.services.auth import AuthService
 
 # F-09: política de senha em troca futura (não invalida senhas atuais).
@@ -70,6 +85,62 @@ def change_password(
             detail="Senha atual inválida",
         )
     return changed
+
+
+@router.post("/totp/setup", response_model=TotpSetupResponse)
+def setup_totp(
+    agent: Annotated[Agent, Depends(get_current_agent)],
+    db: Annotated[Session, Depends(get_db)],
+) -> TotpSetupResponse:
+    if agent.totp_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="2FA ja configurado para este usuario",
+        )
+    secret = generate_totp_secret()
+    agent.totp_secret_encrypted = encrypt_secret(secret)
+    db.commit()
+    return TotpSetupResponse(
+        secret=secret,
+        provisioning_uri=totp_provisioning_uri(secret, agent.email),
+    )
+
+
+@router.post("/totp/enable", response_model=AgentMe)
+def enable_totp(
+    payload: TotpEnableRequest,
+    agent: Annotated[Agent, Depends(get_current_agent)],
+    db: Annotated[Session, Depends(get_db)],
+) -> Agent:
+    secret = decrypt_secret(agent.totp_secret_encrypted)
+    if not secret or not verify_totp_code(secret, payload.code):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Codigo 1Password invalido",
+        )
+    agent.totp_enabled = True
+    db.commit()
+    db.refresh(agent)
+    return agent
+
+
+@router.post("/totp/disable", response_model=AgentMe)
+def disable_totp(
+    payload: TotpDisableRequest,
+    agent: Annotated[Agent, Depends(get_current_agent)],
+    db: Annotated[Session, Depends(get_db)],
+) -> Agent:
+    secret = decrypt_secret(agent.totp_secret_encrypted)
+    if not agent.totp_enabled or not secret or not verify_totp_code(secret, payload.code):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Codigo 1Password invalido",
+        )
+    agent.totp_enabled = False
+    agent.totp_secret_encrypted = None
+    db.commit()
+    db.refresh(agent)
+    return agent
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
