@@ -74,8 +74,13 @@ export function changeOwnPassword(current_password: string, new_password: string
   });
 }
 
-export function getKanban() {
-  return request<KanbanColumn[]>("/tickets/kanban");
+export function getKanban(options: { onlyMine?: boolean } = {}) {
+  const params = new URLSearchParams();
+  if (options.onlyMine) {
+    params.set("only_mine", "true");
+  }
+  const query = params.toString();
+  return request<KanbanColumn[]>(`/tickets/kanban${query ? `?${query}` : ""}`);
 }
 
 export function getTicket(ticketId: number) {

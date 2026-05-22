@@ -22,10 +22,17 @@ class TicketService:
         self.tickets = TicketRepository(db)
         self.agents = AgentRepository(db)
 
-    def kanban(self, viewer: Agent | None = None) -> dict[TicketStatus, list[Ticket]]:
+    def kanban(
+        self,
+        viewer: Agent | None = None,
+        only_mine: bool = False,
+    ) -> dict[TicketStatus, list[Ticket]]:
         columns = {status: [] for status in TicketStatus}
-        scope = viewer.id if viewer and viewer.role == AgentRole.atendente else None
-        for ticket in self.tickets.list_kanban(agent_id_scope=scope):
+        scoped_view = viewer is not None and (
+            only_mine or viewer.role != AgentRole.administrador
+        )
+        scope = viewer.id if scoped_view else None
+        for ticket in self.tickets.list_kanban(assigned_agent_id_scope=scope):
             columns[ticket.status].append(ticket)
         return columns
 

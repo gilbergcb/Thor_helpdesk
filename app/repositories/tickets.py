@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import desc, select
+from sqlalchemy import desc, or_, select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.models.client import ClientEmployee
@@ -67,7 +67,7 @@ class TicketRepository:
             )
         )
 
-    def list_kanban(self, agent_id_scope: int | None = None) -> list[Ticket]:
+    def list_kanban(self, assigned_agent_id_scope: int | None = None) -> list[Ticket]:
         stmt = (
             select(Ticket)
             .options(
@@ -80,9 +80,12 @@ class TicketRepository:
             )
             .order_by(desc(Ticket.created_at))
         )
-        if agent_id_scope is not None:
+        if assigned_agent_id_scope is not None:
             stmt = stmt.where(
-                (Ticket.assigned_agent_id.is_(None)) | (Ticket.assigned_agent_id == agent_id_scope)
+                or_(
+                    Ticket.status == TicketStatus.novo,
+                    Ticket.assigned_agent_id == assigned_agent_id_scope,
+                )
             )
         return list(self.db.scalars(stmt))
 

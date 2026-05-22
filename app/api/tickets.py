@@ -11,7 +11,6 @@ from app.core.database import get_db
 from app.core.tenant import check_ticket_access
 from app.models.support import Agent
 from app.models.ticket import Ticket, TicketMessage, TicketMessageAttachment
-from app.services.media_storage import resolve_storage_path
 from app.schemas.ticket import (
     AssignTicketRequest,
     CreateTicketFromPendingRequest,
@@ -23,6 +22,7 @@ from app.schemas.ticket import (
     TicketUpdateRequest,
     UpdateTicketStatusRequest,
 )
+from app.services.media_storage import resolve_storage_path
 from app.services.tickets import TicketService
 
 router = APIRouter(prefix="/tickets", tags=["tickets"])
@@ -32,8 +32,9 @@ router = APIRouter(prefix="/tickets", tags=["tickets"])
 def kanban(
     db: Annotated[Session, Depends(get_db)],
     agent: Annotated[Agent, Depends(get_current_agent)],
+    only_mine: bool = False,
 ) -> list[KanbanColumn]:
-    columns = TicketService(db).kanban(viewer=agent)
+    columns = TicketService(db).kanban(viewer=agent, only_mine=only_mine)
     return [
         KanbanColumn(status=status_key, tickets=tickets)
         for status_key, tickets in columns.items()

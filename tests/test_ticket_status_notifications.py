@@ -235,3 +235,108 @@ def test_ticket_detail_only_shows_pending_messages_after_ticket_opened_at(
     assert [pending.content for pending in detail.pending_messages] == [
         "Mensagem depois da abertura"
     ]
+
+
+def test_kanban_for_non_admin_shows_new_and_own_tickets(
+    db: Session,
+    ticket_fixture: tuple[Ticket, Agent],
+) -> None:
+    shared_new, agent = ticket_fixture
+    another_agent = Agent(
+        name="Outro Atendente",
+        email="outro@example.com",
+        phone="5585777777777",
+        password_hash="hash",
+        role=AgentRole.atendente,
+    )
+    own_ticket = Ticket(
+        protocol="THOR-OWN",
+        title="Meu atendimento",
+        description="Meu atendimento em andamento",
+        status=TicketStatus.em_atendimento,
+        opened_at=datetime.now(UTC),
+        client=shared_new.client,
+        whatsapp_group=shared_new.whatsapp_group,
+        requester=shared_new.requester,
+        assigned_agent=agent,
+    )
+    other_ticket = Ticket(
+        protocol="THOR-OTHER",
+        title="Atendimento de outro",
+        description="Atendimento de outro usuário",
+        status=TicketStatus.em_atendimento,
+        opened_at=datetime.now(UTC),
+        client=shared_new.client,
+        whatsapp_group=shared_new.whatsapp_group,
+        requester=shared_new.requester,
+        assigned_agent=another_agent,
+    )
+    unassigned_triage = Ticket(
+        protocol="THOR-UNASSIGNED-TRIAGE",
+        title="Triagem sem atendente",
+        description="Nao deve aparecer no escopo do atendente",
+        status=TicketStatus.triagem,
+        opened_at=datetime.now(UTC),
+        client=shared_new.client,
+        whatsapp_group=shared_new.whatsapp_group,
+        requester=shared_new.requester,
+    )
+    db.add_all([another_agent, own_ticket, other_ticket, unassigned_triage])
+    db.commit()
+
+    columns = TicketService(db).kanban(viewer=agent)
+    protocols = {ticket.protocol for tickets in columns.values() for ticket in tickets}
+
+    assert shared_new.protocol in protocols
+    assert "THOR-OWN" in protocols
+    assert "THOR-OTHER" not in protocols
+    assert "THOR-UNASSIGNED-TRIAGE" not in protocols
+
+
+def test_kanban_admin_only_mine_shows_new_and_own_tickets(
+    db: Session,
+    ticket_fixture: tuple[Ticket, Agent],
+) -> None:
+    shared_new, _agent = ticket_fixture
+    admin = Agent(
+        name="Admin THOR",
+        email="admin@example.com",
+        phone="5585666666666",
+        password_hash="hash",
+        role=AgentRole.administrador,
+    )
+    own_ticket = Ticket(
+        protocol="THOR-ADMIN-OWN",
+        title="Atendimento do admin",
+        description="Atendimento do admin",
+        status=TicketStatus.em_atendimento,
+        opened_at=datetime.now(UTC),
+        client=shared_new.client,
+        whatsapp_group=shared_new.whatsapp_group,
+        requester=shared_new.requester,
+        assigned_agent=admin,
+    )
+    other_ticket = Ticket(
+        protocol="THOR-ADMIN-OTHER",
+        title="Atendimento de outro",
+        description="Atendimento de outro usuario",
+        status=TicketStatus.em_atendimento,
+        opened_at=datetime.now(UTC),
+        client=shared_new.client,
+        whatsapp_group=shared_new.whatsapp_group,
+        requester=shared_new.requester,
+    )
+    db.add_all([admin, own_ticket, other_ticket])
+    db.commit()
+
+    all_columns = TicketService(db).kanban(viewer=admin)
+    all_protocols = {ticket.protocol for tickets in all_columns.values() for ticket in tickets}
+    only_mine_columns = TicketService(db).kanban(viewer=admin, only_mine=True)
+    only_mine_protocols = {
+        ticket.protocol for tickets in only_mine_columns.values() for ticket in tickets
+    }
+
+    assert "THOR-ADMIN-OTHER" in all_protocols
+    assert shared_new.protocol in only_mine_protocols
+    assert "THOR-ADMIN-OWN" in only_mine_protocols
+    assert "THOR-ADMIN-OTHER" not in only_mine_protocols

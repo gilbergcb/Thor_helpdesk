@@ -209,13 +209,14 @@ function PrivateApp() {
   const [ticketPanelOpen, setTicketPanelOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
+  const [kanbanOnlyMine, setKanbanOnlyMine] = useState(false);
   const isAdmin = me?.role === "administrador";
 
   async function load() {
     if (!authenticated || me?.must_change_password) return;
     setLoading(true);
     try {
-      const data = await getKanban();
+      const data = await getKanban({ onlyMine: isAdmin && kanbanOnlyMine });
       setColumns(data);
       const tickets = data.flatMap((column) => column.tickets);
       setSelected((current) => {
@@ -251,7 +252,7 @@ function PrivateApp() {
       load().catch(console.error);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authenticated, me?.id, me?.must_change_password]);
+  }, [authenticated, me?.id, me?.must_change_password, kanbanOnlyMine]);
 
   useEffect(() => {
     const handleExpired = () => setAuthenticated(false);
@@ -479,6 +480,35 @@ function PrivateApp() {
       ) : view === "kanban" ? (
         <div className={`thor-kanban-workspace ${ticketPanelOpen && selected ? "detail-open" : ""}`}>
           <section className="thor-kanban-panel">
+            {isAdmin ? (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  padding: "0 4px 12px"
+                }}
+              >
+                <label
+                  className="smallcaps"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    cursor: "pointer",
+                    color: "var(--ink-soft)",
+                    userSelect: "none"
+                  }}
+                >
+                  <input
+                    checked={kanbanOnlyMine}
+                    onChange={(event) => setKanbanOnlyMine(event.target.checked)}
+                    style={{ accentColor: "var(--accent)" }}
+                    type="checkbox"
+                  />
+                  Apenas meus atendimentos
+                </label>
+              </div>
+            ) : null}
             <KanbanBoard
               columns={columns}
               onSelect={(ticket) => {
