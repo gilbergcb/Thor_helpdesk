@@ -185,8 +185,11 @@ class TicketService:
         identity = agent.name
         if agent.phone:
             identity = f"{identity} ({agent.phone})"
+        requester_mention = self._requester_mention(ticket)
+        mention_prefix = f"{requester_mention} " if requester_mention else ""
         message = (
-            f"O chamado {ticket.protocol} foi marcado como resolvido por {identity}.\n\n"
+            f"{mention_prefix}O chamado {ticket.protocol} foi marcado como "
+            f"resolvido por {identity}.\n\n"
             "Se precisar de algo mais, responda por aqui."
         )
         try:
@@ -218,8 +221,10 @@ class TicketService:
         identity = agent.name
         if agent.phone:
             identity = f"{identity} ({agent.phone})"
+        requester_mention = self._requester_mention(ticket)
+        mention_prefix = f"{requester_mention} " if requester_mention else ""
         message = (
-            f"O chamado {ticket.protocol} foi fechado por {identity}.\n\n"
+            f"{mention_prefix}O chamado {ticket.protocol} foi fechado por {identity}.\n\n"
             "Obrigado pelo retorno. Se precisar de novo atendimento, abra um novo chamado."
         )
         try:
@@ -246,6 +251,13 @@ class TicketService:
             )
         )
         self.db.commit()
+
+    @staticmethod
+    def _requester_mention(ticket: Ticket) -> str | None:
+        if ticket.requester is None or not ticket.requester.phone:
+            return None
+        phone = "".join(char for char in ticket.requester.phone if char.isdigit())
+        return f"@{phone}" if phone else None
 
     def link_pending_message(
         self,

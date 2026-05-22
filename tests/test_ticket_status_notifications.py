@@ -48,6 +48,11 @@ def db() -> Session:
 def ticket_fixture(db: Session) -> tuple[Ticket, Agent]:
     client = Client(name="Cliente Teste", document="123")
     group = WhatsAppGroup(client=client, group_id="120363000000000000-group", name="Grupo Teste")
+    requester = WhatsAppUser(
+        group=group,
+        phone="55 (85) 8888-8888",
+        name="Cliente Solicitante",
+    )
     agent = Agent(
         name="Supervisor THOR",
         email="supervisor@example.com",
@@ -62,8 +67,9 @@ def ticket_fixture(db: Session) -> tuple[Ticket, Agent]:
         opened_at=datetime.now(UTC),
         client=client,
         whatsapp_group=group,
+        requester=requester,
     )
-    db.add_all([client, group, agent, ticket])
+    db.add_all([client, group, requester, agent, ticket])
     db.commit()
     db.refresh(ticket)
     db.refresh(agent)
@@ -85,7 +91,7 @@ def test_change_status_to_closed_sends_group_notice(
         (
             "120363000000000000-group",
             (
-                "O chamado THOR-20260522-0001 foi fechado por "
+                "@558588888888 O chamado THOR-20260522-0001 foi fechado por "
                 "Supervisor THOR (5585999999999).\n\n"
                 "Obrigado pelo retorno. Se precisar de novo atendimento, abra um novo chamado."
             ),
@@ -122,6 +128,29 @@ def test_change_status_does_not_repeat_closed_notice_for_same_status(
     asyncio.run(TicketService(db).change_status(ticket.id, TicketStatus.fechado, agent))
 
     assert FakeZApiClient.sent_messages == []
+
+
+def test_change_status_to_resolved_mentions_ticket_requester(
+    db: Session,
+    ticket_fixture: tuple[Ticket, Agent],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    ticket, agent = ticket_fixture
+    FakeZApiClient.sent_messages = []
+    monkeypatch.setattr("app.services.tickets.ZApiClient", FakeZApiClient)
+
+    asyncio.run(TicketService(db).change_status(ticket.id, TicketStatus.resolvido, agent))
+
+    assert FakeZApiClient.sent_messages == [
+        (
+            "120363000000000000-group",
+            (
+                "@558588888888 O chamado THOR-20260522-0001 foi marcado como resolvido por "
+                "Supervisor THOR (5585999999999).\n\n"
+                "Se precisar de algo mais, responda por aqui."
+            ),
+        )
+    ]
 
 
 def test_ticket_detail_only_shows_pending_messages_after_ticket_opened_at(
